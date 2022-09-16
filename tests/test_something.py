@@ -7,20 +7,30 @@ Otherwise https://docs.pytest.org/en/latest/ and https://docs.python.org/3/libra
 are also good support.
 """
 import pytest
+import pathlib
+
+# pylint: disable=W0611
+import oemof.tabular.datapackage  # noqa
+from oemof import solph
+from oemof.network.energy_system import EnergySystem
+from oemof.tabular.facades import TYPEMAP
+
+from django_oemof import models
 
 
-# this function will not run as a test as its name does not start by "test_"
-def addition(a, b):
-    return a + b
+OEMOF_DATAPACKAGE = "test_data/dispatch"
 
 
-# each test is described in a function, the function must start with "test_"
-# something has to be asserted within the function
-def test_addition():
-    assert addition(2, 2) == 4
+def test_store_oemof_results():
+    energysystem = EnergySystem.from_datapackage(OEMOF_DATAPACKAGE, typemap=TYPEMAP)
+    model = solph.Model(energysystem)
+    model.solve(solver="cbc")
 
+    input_data = solph.processing.parameter_as_dict(
+        energysystem,
+        exclude_attrs=["bus", "from_bus", "to_bus", "from_node", "to_node"],
+    )
+    results_data = solph.processing.results(model)
+    result_id = models.OemofDataset.store_results(input_data, results_data)
+    assert result_id == 1
 
-# one can test that exception are raised
-def test_addition_wrong_argument_number():
-    with pytest.raises(TypeError):
-        assert addition(2) == 2  # pylint: disable=E1120
