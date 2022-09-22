@@ -11,23 +11,41 @@ from oemof.tabular.facades import TYPEMAP
 from django_oemof import models
 
 
-def build_energysystem(oemof_datapackage: str, parameters: dict = None):
+def build_energysystem(oemof_datapackage: str):
     """
-    Builds energysystem from datapackage and adapts parameter changes
+    Builds energysystem from datapackage
 
     Parameters
     ----------
     oemof_datapackage: str
         Path to oemof.tabular datapackage
-    parameters: dict
-        Parameters which shall be adapted in energysystem, diverging from base ES
 
     Returns
     -------
-    energysystem: Energysystem build from datapacakge containing changes from parameters
+    energysystem: Energysystem build from datapacakge
+    """
+    energysystem = EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
+    return energysystem
+
+
+def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
+    """
+    Adapt parameters in ES
+
+    This allows loading standard ES and changing specific parameters after build.
+
+    Parameters
+    ----------
+    energysystem: EnergySystem
+        Energysystem to change parameters
+    parameters: dict
+        Parameters which shall be adapted in ES
+
+    Returns
+    -------
+    energysystem: Energysystem with changed parameters
     """
     parameters = parameters or {}
-    energysystem = EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
 
     # Very simple attribute adaption of parameters - may be too simple in case of more complex facades
     for group, attributes in parameters.items():
