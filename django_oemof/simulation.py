@@ -11,7 +11,34 @@ from oemof.tabular.facades import TYPEMAP
 from django_oemof import models
 
 
-def multiprocess_energysystem(oemof_datapackage):
+def build_energysystem(oemof_datapackage: str, parameters: dict = None):
+    """
+    Builds energysystem from datapackage and adapts parameter changes
+
+    Parameters
+    ----------
+    oemof_datapackage: str
+        Path to oemof.tabular datapackage
+    parameters: dict
+        Parameters which shall be adapted in energysystem, diverging from base ES
+
+    Returns
+    -------
+    energysystem: Energysystem build from datapacakge containing changes from parameters
+    """
+    parameters = parameters or {}
+    energysystem = EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
+
+    # Very simple attribute adaption of parameters - may be too simple in case of more complex facades
+    for group, attributes in parameters.items():
+        for attribute, value in attributes.items():
+            setattr(energysystem.groups[group], attribute, value)
+        energysystem.groups[group].update()
+
+    return energysystem
+
+
+def multiprocess_energysystem(energysystem):
     """
     Starts multiprocessed simulation of Oemof energysystem
 
@@ -19,15 +46,14 @@ def multiprocess_energysystem(oemof_datapackage):
 
     Parameters
     ----------
-    oemof_datapackage: str
-        Path to datapackage.json of oemof.tabular energysystem datapackage
+    energysystem: EnergySystem
+        Energysystem which shall be optimized
 
     Returns
     -------
     result_id: int
         Primary key of stored OemofDataset
     """
-    energysystem = EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
     queue = mp.Queue()
     process = mp.Process(target=simulate_and_store_results, args=(queue, energysystem))
     process.start()

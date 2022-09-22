@@ -24,6 +24,7 @@ class BuildEnergysystem(APIView):
         Response
         """
         scenario = request.GET["scenario"]
-        oemof_datapacackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
-        result_id = simulation.multiprocess_energysystem(oemof_datapacackage)
+        oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
+        energysystem = simulation.build_energysystem(oemof_datapackage)
+        result_id = simulation.multiprocess_energysystem(energysystem)
         return Response(f"{result_id=}")
