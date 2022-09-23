@@ -6,8 +6,17 @@ from django.db import models
 from oemof.solph.processing import convert_keys_to_strings
 
 
+class Simulation(models.Model):
+    """Holds information about simulation input parameters and related oemof results"""
+
+    scenario = models.CharField(max_length=255)
+    parameters = models.JSONField()
+    dataset = models.ForeignKey("OemofDataset", on_delete=models.CASCADE)
+
+
 class OemofDataset(models.Model):
-    "Holds inputs and results of an oemof solph optimization"
+    """Holds inputs and results of an oemof solph optimization"""
+
     input = models.ForeignKey("OemofData", on_delete=models.CASCADE, related_name="data_input")  # noqa: A003
     result = models.ForeignKey("OemofData", on_delete=models.CASCADE, related_name="data_result")
 
@@ -34,14 +43,12 @@ class OemofDataset(models.Model):
 
         Returns
         -------
-        int: Index of created OemofDataset
+        OemofDataset: Instance of created OemofDataset
         """
-        # Check if nodes are strings:
         if not isinstance(next(iter(input_data)), str):
             input_data = convert_keys_to_strings(input_data)
         if not isinstance(next(iter(result_data)), str):
             result_data = convert_keys_to_strings(result_data)
-
         oemof_dataset = OemofDataset()
         for input_result_attr, data in (("input", input_data), ("result", result_data)):
             scalars = []
@@ -49,26 +56,17 @@ class OemofDataset(models.Model):
             for (from_node, to_node), sc_sq_dict in data.items():
                 for key, value in sc_sq_dict["scalars"].items():
                     scalar = OemofScalar(
-                        from_node=from_node,
-                        to_node=to_node,
-                        attribute=key,
-                        value=value,
-                        type=type(value).__name__,
+                        from_node=from_node, to_node=to_node, attribute=key, value=value, type=type(value).__name__
                     )
                     scalar.save()
                     scalars.append(scalar)
-
                 for key, series in sc_sq_dict["sequences"].items():
                     list_type = "list"
                     if isinstance(series, pandas.Series):
                         series = series.values.tolist()
                         list_type = "series"
                     sequence = OemofSequence(
-                        from_node=from_node,
-                        to_node=to_node,
-                        attribute=key,
-                        value=series,
-                        type=list_type,
+                        from_node=from_node, to_node=to_node, attribute=key, value=series, type=list_type
                     )
                     sequence.save()
                     sequences.append(sequence)
@@ -78,8 +76,7 @@ class OemofDataset(models.Model):
             oemof_data.sequences.set(sequences)
             setattr(oemof_dataset, input_result_attr, oemof_data)
         oemof_dataset.save()
-        result_id = oemof_dataset.id
-        return result_id
+        return oemof_dataset
 
     def restore_results(self):
         """

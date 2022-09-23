@@ -4,11 +4,46 @@ import multiprocessing as mp
 
 # pylint: disable=W0611
 import oemof.tabular.datapackage  # noqa
+from django.conf import settings
 from oemof import solph
 from oemof.network.energy_system import EnergySystem
 from oemof.tabular.facades import TYPEMAP
 
 from django_oemof import models
+
+
+def simulate_scenario(scenario: str, parameters: dict):
+    """
+    Returns ID to oemof results from simulated/restored scenario
+
+    Already stored scenarios are identified by scenario name and
+    adapted parameters.
+
+    Parameters
+    ----------
+    scenario: str
+        Name of scenario (used to load related datapackage)
+    parameters: dict
+        Parameters which are adapted to ES before simulation
+
+    Returns
+    -------
+    results: tuple(dict, dict)
+        Results of given scenario with adapted parameters
+    """
+    try:
+        simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
+    except models.Simulation.DoesNotExist:
+        oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
+        energysystem = build_energysystem(oemof_datapackage)
+        energysystem = adapt_energysystem(energysystem, parameters)
+        input_data, results_data = multiprocess_simulation(energysystem)
+        dataset = models.OemofDataset.store_results(input_data, results_data)
+        simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
+        simulation.save()
+        return input_data, results_data
+    else:
+        return simulation.dataset.restore_results()
 
 
 def build_energysystem(oemof_datapackage: str):
@@ -24,8 +59,7 @@ def build_energysystem(oemof_datapackage: str):
     -------
     energysystem: Energysystem build from datapacakge
     """
-    energysystem = EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
-    return energysystem
+    return EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
 
 
 def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
@@ -37,7 +71,8 @@ def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
     Parameters
     ----------
     energysystem: EnergySystem
-        Energysystem to change parameters
+        Components in Energysystem are changed by given parameters
+
     parameters: dict
         Parameters which shall be adapted in ES
 
@@ -56,7 +91,7 @@ def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
     return energysystem
 
 
-def multiprocess_energysystem(energysystem):
+def multiprocess_simulation(energysystem):
     """
     Starts multiprocessed simulation of Oemof energysystem
 
@@ -75,9 +110,9 @@ def multiprocess_energysystem(energysystem):
     queue = mp.Queue()
     process = mp.Process(target=simulate_and_store_results, args=(queue, energysystem))
     process.start()
-    result_id = queue.get()
+    results = queue.get()
     process.join()
-    return result_id
+    return results
 
 
 def simulate_and_store_results(queue, energysystem):
@@ -91,9 +126,8 @@ def simulate_and_store_results(queue, energysystem):
     energysystem: EnergySystem
         Oemof Energysystem to simulate
     """
-    input_data, result_data = simulate_energysystem(energysystem)
-    result_id = models.OemofDataset.store_results(input_data, result_data)
-    queue.put(result_id)
+    results = simulate_energysystem(energysystem)
+    queue.put(results)
 
 
 def simulate_energysystem(energysystem):
@@ -107,8 +141,8 @@ def simulate_energysystem(energysystem):
 
     Returns
     -------
-    simulation_id : int
-        Simulation ID to restore results from
+    results : tuple(dict, dict)
+        Simulation input and results
     """
     model = solph.Model(energysystem)
     model.solve(solver="cbc")
@@ -119,4 +153,4 @@ def simulate_energysystem(energysystem):
     )
     results_data = solph.processing.results(model)
 
-    return input_data, results_data
+    return map(solph.processing.convert_keys_to_strings, (input_data, results_data))

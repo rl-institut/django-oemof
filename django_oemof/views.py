@@ -1,18 +1,18 @@
 """Views for django_oemof"""
 
-from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django_oemof import simulation
 
 
-class BuildEnergysystem(APIView):
+class SimulateEnergysystem(APIView):
     """View to build and simulate Oemof energysystem from datapackage"""
 
-    def get(self, request):
+    @staticmethod
+    def get(request):
         """
-        Takes path to oemof datapackage, simulates ES and returns OemofDataset result ID
+        Takes path to oemof datapackage, simulates ES and returns results
 
         Parameters
         ----------
@@ -24,7 +24,6 @@ class BuildEnergysystem(APIView):
         Response
         """
         scenario = request.GET["scenario"]
-        oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
-        energysystem = simulation.build_energysystem(oemof_datapackage)
-        result_id = simulation.multiprocess_energysystem(energysystem)
-        return Response(f"{result_id=}")
+        parameters = request.GET.get("parameters", {})
+        _, _ = simulation.simulate_scenario(scenario, parameters)
+        return Response()
