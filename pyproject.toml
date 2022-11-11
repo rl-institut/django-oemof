@@ -10,7 +10,8 @@ packages = [{include = "django_oemof"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 django-environ = "^0.4.5"  # https://github.com/joke2k/django-environ
-oemoflex = {git = "https://github.com/rl-institut/oemoflex.git", rev = "dev"}
+oemoflex = {git = "https://github.com/rl-institut/oemoflex.git", rev = "feature/refactor_postprocessing"}
+djangorestframework = "^3.14.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -18,6 +19,9 @@ pre-commit = "^2.20.0"
 black = "^21.12b0"
 flake8 = "^5.0.4"
 pylint = "^2.15.2"
+mypy = "^0.990"
+Django = "^3.2.3"
+psycopg2-binary = "^2.9.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -29,3 +33,7 @@ line-length = 120
 
 [tool.isort]
 profile = "black"
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ["django_oemof/migrations/*"]
