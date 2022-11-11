@@ -3,7 +3,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import simulation
+from django_oemof import simulation, results
 
 
 class SimulateEnergysystem(APIView):
@@ -25,5 +25,7 @@ class SimulateEnergysystem(APIView):
         """
         scenario = request.GET["scenario"]
         parameters = request.GET.get("parameters", {})
-        _, _ = simulation.simulate_scenario(scenario, parameters)
-        return Response()
+        input_data, output_data = simulation.simulate_scenario(scenario, parameters)
+        calculations = request.GET.get("calculations")
+        calculated_results = results.calculate_results(input_data, output_data, calculations)
+        return Response(calculated_results)
