@@ -3,6 +3,7 @@
 import pandas
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from oemof.network.network import Node
 from oemof.solph.processing import convert_keys_to_strings
 
 
@@ -55,6 +56,8 @@ class OemofDataset(models.Model):
             sequences = []
             for (from_node, to_node), sc_sq_dict in data.items():
                 for key, value in sc_sq_dict["scalars"].items():
+                    if isinstance(value, Node):
+                        continue
                     scalar = OemofScalar(
                         from_node=from_node, to_node=to_node, attribute=key, value=value, type=type(value).__name__
                     )
