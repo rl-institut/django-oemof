@@ -1,6 +1,7 @@
 """Module to run django tests for standalone app"""
 
 import sys
+import pathlib
 
 import django
 import environ
@@ -11,8 +12,11 @@ env = environ.Env()
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 
+TEST_FOLDER = pathlib.Path(__file__).parent / "django_oemof" / "tests"
+TEST_PATH = "django_oemof.tests"
 
-def runtests():
+
+def runtests(test_module=TEST_PATH):
     """Sets up django settings an runs tests"""
 
     if not settings.configured:
@@ -53,14 +57,18 @@ def runtests():
                     },
                 },
             ],
+            MEDIA_ROOT=TEST_FOLDER / "test_data"
         )
 
     if django.VERSION >= (1, 7):
         django.setup()
-    failures = call_command("test", "django_oemof.tests", interactive=False, failfast=False, verbosity=2)
+    failures = call_command("test", test_module, interactive=False, keepdb=True, failfast=False, verbosity=2)
 
     sys.exit(bool(failures))
 
 
 if __name__ == "__main__":
-    runtests()
+    if len(sys.argv) > 1:
+        runtests(test_module=f"{TEST_PATH}.{sys.argv[1]}")
+    else:
+        runtests()
