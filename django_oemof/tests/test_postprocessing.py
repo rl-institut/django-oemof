@@ -31,11 +31,9 @@ class PostprocessingTest(SimpleTestCase):
         assert not total_system_costs.result.empty
 
     def test_results(self):
-        input_data, results_data = simulation.simulate_scenario(OEMOF_DATAPACKAGE, parameters={})
-
         # Register calculation test:
         dor.register_calculation(TestCalculation)
-        results = dor.calculate_results(input_data, results_data, calculations=["test"])
+        results = dor.get_results(OEMOF_DATAPACKAGE, parameters={}, calculations=["test"])
         assert "test" in results
         assert not results["test"].empty
 

@@ -25,7 +25,6 @@ class SimulateEnergysystem(APIView):
         """
         scenario = request.GET["scenario"]
         parameters = request.GET.get("parameters", {})
-        input_data, output_data = simulation.simulate_scenario(scenario, parameters)
         calculations = request.GET.get("calculations")
-        calculated_results = results.calculate_results(input_data, output_data, calculations)
+        calculated_results = results.get_results(scenario, parameters, calculations)
         return Response(calculated_results)
