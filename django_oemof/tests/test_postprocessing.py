@@ -1,13 +1,11 @@
 
-import pathlib
-
 from django.test import SimpleTestCase
 from oemoflex.postprocessing import postprocessing
 
 from django_oemof import simulation
 
 
-OEMOF_DATAPACKAGE = pathlib.Path(__file__).parent / "test_data" / "test_scenario" / "datapackage.json"
+OEMOF_DATAPACKAGE = "test_scenario"
 
 
 class OemofDBTest(SimpleTestCase):
@@ -19,10 +17,10 @@ class OemofDBTest(SimpleTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        simulation.simulate_scenario("test_scenario", parameters={})
+        simulation.simulate_scenario(OEMOF_DATAPACKAGE, parameters={})
 
     def test_postprocessing(self):
-        input_data, results_data = simulation.simulate_scenario("test_scenario", parameters={})
+        input_data, results_data = simulation.simulate_scenario(OEMOF_DATAPACKAGE, parameters={})
         calculator = postprocessing.Calculator(input_data, results_data)
         total_system_costs = postprocessing.TotalSystemCosts(calculator)
         print(total_system_costs.result)
@@ -33,5 +31,3 @@ class OemofDBTest(SimpleTestCase):
     @classmethod
     def tearDownClass(cls):
         pass
-
-
