@@ -32,8 +32,8 @@ def simulate_scenario(scenario: str, parameters: dict):
 
     Returns
     -------
-    results: tuple(dict, dict)
-        Results of given scenario with adapted parameters
+    simulation: models.Simulation
+        Simulation instance
     """
     try:
         simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
@@ -46,9 +46,7 @@ def simulate_scenario(scenario: str, parameters: dict):
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
         simulation.save()
-        return input_data, results_data
-    else:
-        return simulation.dataset.restore_results()
+    return simulation
 
 
 def build_energysystem(oemof_datapackage: str):

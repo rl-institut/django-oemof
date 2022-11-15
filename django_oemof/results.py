@@ -62,9 +62,8 @@ def get_results(
         results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
 
     if any(calculation not in results for calculation in calculations):
-        input_data, output_data = simulation.simulate_scenario(scenario, parameters)
-        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
-        calculator = postprocessing.Calculator(input_data, output_data)
+        sim = simulation.simulate_scenario(scenario, parameters)
+        calculator = postprocessing.Calculator(*sim.dataset.restore_results())
         for calculation in calculations:
             if calculation in results:
                 continue

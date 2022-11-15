@@ -11,4 +11,5 @@ router = DefaultRouter()
 urlpatterns = [
     path("", include(router.urls)),
     path("simulate", views.SimulateEnergysystem.as_view()),
+    path("calculate", views.CalculateResults.as_view()),
 ]
