@@ -1,10 +1,12 @@
+"""Module to calculate oemof results"""
+
 import inspect
 from typing import Union
 import pandas
 
-from . import simulation, models
-
 from oemoflex.postprocessing import core, postprocessing
+
+from . import simulation, models
 
 
 CALCULATIONS = {
@@ -45,22 +47,23 @@ def get_results(
         Dict containing calculation name as key and calculation result as value
     """
     try:
-        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
-    except models.Simulation.DoesNotExist:
+        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
+    except models.Simulation.DoesNotExist:  # pylint: disable=E1101
+        # pylint: disable=W0707
         raise simulation.SimulationError(f"Simulation for {scenario=} with {parameters=} not present in database.")
 
     results = {}
     for calculation in calculations:
         try:
             calculation_instance = sim.results.get(name=calculation)
-        except models.Result.DoesNotExist:
+        except models.Result.DoesNotExist:  # pylint: disable=E1101
             continue
         result = pandas.read_json(calculation_instance.data, orient="table")
         results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
 
     if any(calculation not in results for calculation in calculations):
         input_data, output_data = simulation.simulate_scenario(scenario, parameters)
-        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
+        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
         calculator = postprocessing.Calculator(input_data, output_data)
         for calculation in calculations:
             if calculation in results:

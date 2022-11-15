@@ -36,13 +36,14 @@ def simulate_scenario(scenario: str, parameters: dict):
         Results of given scenario with adapted parameters
     """
     try:
-        simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
-    except models.Simulation.DoesNotExist:
+        simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
+    except models.Simulation.DoesNotExist:  # pylint: disable=E1101
         oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
         energysystem = build_energysystem(oemof_datapackage)
         energysystem = adapt_energysystem(energysystem, parameters)
         input_data, results_data = multiprocess_simulation(energysystem)
         dataset = models.OemofDataset.store_results(input_data, results_data)
+        # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
         simulation.save()
         return input_data, results_data

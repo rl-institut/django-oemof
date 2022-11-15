@@ -57,7 +57,7 @@ def runtests(test_module=TEST_PATH):
                     },
                 },
             ],
-            MEDIA_ROOT=TEST_FOLDER / "test_data"
+            MEDIA_ROOT=TEST_FOLDER / "test_data",
         )
 
     if django.VERSION >= (1, 7):

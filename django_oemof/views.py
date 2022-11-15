@@ -3,7 +3,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import simulation, results
+from django_oemof import results
 
 
 class SimulateEnergysystem(APIView):

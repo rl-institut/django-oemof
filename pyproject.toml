@@ -22,6 +22,7 @@ pylint = "^2.15.2"
 mypy = "^0.990"
 Django = "^3.2.3"
 psycopg2-binary = "^2.9.5"
+pytest = "^7.2.0"
 
 [build-system]
 requires = ["poetry-core"]

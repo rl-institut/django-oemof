@@ -75,8 +75,8 @@ class OemofDataset(models.Model):
                     sequences.append(sequence)
             oemof_data = OemofData()
             oemof_data.save()
-            oemof_data.scalars.set(scalars)
-            oemof_data.sequences.set(sequences)
+            oemof_data.scalars.set(scalars)  # pylint: disable=E1101
+            oemof_data.sequences.set(sequences)  # pylint: disable=E1101
             setattr(oemof_dataset, input_result_attr, oemof_data)
         oemof_dataset.save()
         return oemof_dataset
@@ -106,12 +106,12 @@ class OemofDataset(models.Model):
         result_data = {}
         for input_result_attr, data in (("input", input_data), ("result", result_data)):
             ir_attr = getattr(self, input_result_attr)
-            for scalar in ir_attr.scalars.all():
+            for scalar in ir_attr.scalars.all():  # pylint: disable=E1101
                 nodes = (scalar.from_node, scalar.to_node)
                 if nodes not in data:
                     data[nodes] = {"scalars": {}, "sequences": {}}
                 data[nodes]["scalars"][scalar.attribute] = type_conversion(scalar.value, scalar.type)
-            for sequence in ir_attr.sequences.all():
+            for sequence in ir_attr.sequences.all():  # pylint: disable=E1101
                 nodes = (sequence.from_node, sequence.to_node)
                 if nodes not in data:
                     data[nodes] = {"scalars": {}, "sequences": {}}

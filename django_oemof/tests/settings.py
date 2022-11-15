@@ -1,3 +1,5 @@
+"""Settings for testing django-oemof app"""
+
 import pathlib
 import environ
 

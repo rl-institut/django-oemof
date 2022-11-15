@@ -1,3 +1,4 @@
+"""Postprocessing test module"""
 
 from django.test import SimpleTestCase
 from oemoflex.postprocessing import core, postprocessing
@@ -9,6 +10,8 @@ OEMOF_DATAPACKAGE = "dispatch"
 
 
 class TestCalculation(core.Calculation):
+    """Example calculation for testing"""
+
     name = "test"
     depends_on = [postprocessing.SummedFlows]
 
@@ -21,9 +24,11 @@ class PostprocessingTest(SimpleTestCase):
     SimpleTestCase in combination with `database` and overrideen `tearDown` is used to preserve data in database,
     as `--keepdb` only keeps tables, not records
     """
+
     databases = "__all__"  # This is used to preserve data in database (--keepdb only keeps tables, not records)
 
     def test_postprocessing(self):
+        """Tests postprocessing of oemof simulation"""
         input_data, results_data = simulation.simulate_scenario(OEMOF_DATAPACKAGE, parameters={})
         calculator = postprocessing.Calculator(input_data, results_data)
         total_system_costs = postprocessing.TotalSystemCosts(calculator)
@@ -31,6 +36,7 @@ class PostprocessingTest(SimpleTestCase):
         assert not total_system_costs.result.empty
 
     def test_results(self):
+        """Tests registration of custom calculation"""
         # Register calculation test:
         dor.register_calculation(TestCalculation)
         results = dor.get_results(OEMOF_DATAPACKAGE, parameters={}, calculations=["test"])

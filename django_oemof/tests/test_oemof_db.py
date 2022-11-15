@@ -24,7 +24,7 @@ class OemofDBTest(TransactionTestCase):
 
         result_id = models.OemofDataset.store_results(input_data, results_data)
         assert result_id == 1
-        dataset = models.OemofDataset.objects.get(pk=result_id)
+        dataset = models.OemofDataset.objects.get(pk=result_id)  # pylint: disable=E1101
         restored_input, restored_results = dataset.restore_results()
         assert len(input_data) == len(restored_input)
         assert len(input_data) == len(restored_input)
