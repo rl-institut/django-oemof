@@ -12,6 +12,10 @@ from oemof.tabular.facades import TYPEMAP
 from django_oemof import models
 
 
+class SimulationError(Exception):
+    """Raised if simulation failed or simulation is not present"""
+
+
 def simulate_scenario(scenario: str, parameters: dict):
     """
     Returns ID to oemof results from simulated/restored scenario

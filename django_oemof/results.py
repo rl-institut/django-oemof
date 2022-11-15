@@ -44,19 +44,19 @@ def get_results(
     dict
         Dict containing calculation name as key and calculation result as value
     """
-    results = {}
     try:
         sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
     except models.Simulation.DoesNotExist:
-        pass
-    else:
-        for calculation in calculations:
-            try:
-                calculation_instance = sim.results.get(name=calculation)
-            except models.Result.DoesNotExist:
-                continue
-            result = pandas.read_json(calculation_instance.data, orient="table")
-            results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
+        raise simulation.SimulationError(f"Simulation for {scenario=} with {parameters=} not present in database.")
+
+    results = {}
+    for calculation in calculations:
+        try:
+            calculation_instance = sim.results.get(name=calculation)
+        except models.Result.DoesNotExist:
+            continue
+        result = pandas.read_json(calculation_instance.data, orient="table")
+        results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
 
     if any(calculation not in results for calculation in calculations):
         input_data, output_data = simulation.simulate_scenario(scenario, parameters)

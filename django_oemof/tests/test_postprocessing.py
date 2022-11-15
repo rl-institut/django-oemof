@@ -5,7 +5,7 @@ from oemoflex.postprocessing import core, postprocessing
 from django_oemof import simulation, results as dor
 
 
-OEMOF_DATAPACKAGE = "test_scenario"
+OEMOF_DATAPACKAGE = "dispatch"
 
 
 class TestCalculation(core.Calculation):
@@ -38,8 +38,10 @@ class PostprocessingTest(SimpleTestCase):
         assert not results["test"].empty
 
     def tearDown(self) -> None:
+        # Must stay empty in order to keep simulation data in test db
         pass
 
     @classmethod
     def tearDownClass(cls):
+        # Must stay empty in order to keep simulation data in test db
         pass
