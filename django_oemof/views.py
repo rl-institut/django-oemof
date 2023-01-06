@@ -48,6 +48,6 @@ class CalculateResults(APIView):
         """
         scenario = request.GET["scenario"]
         parameters = request.GET.get("parameters", {})
-        calculations = request.GET.get("calculations")
+        calculations = request.GET.getlist("calculations")
         calculated_results = results.get_results(scenario, parameters, calculations)
         return Response(calculated_results)
