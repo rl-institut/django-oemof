@@ -6,7 +6,7 @@ from oemoflex.postprocessing import core, postprocessing
 from django_oemof import simulation, results as dor
 
 
-OEMOF_DATAPACKAGE = "dispatch"
+OEMOF_DATAPACKAGE = "test_scenario"
 
 
 class TestCalculation(core.Calculation):

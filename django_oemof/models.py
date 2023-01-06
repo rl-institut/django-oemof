@@ -12,7 +12,7 @@ class Simulation(models.Model):
 
     scenario = models.CharField(max_length=255)
     parameters = models.JSONField()
-    dataset = models.ForeignKey("OemofDataset", on_delete=models.CASCADE)
+    dataset = models.ForeignKey("OemofDataset", on_delete=models.CASCADE, null=True)
 
 
 class OemofDataset(models.Model):

@@ -7,7 +7,7 @@ env = environ.Env()
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 
-TEST_FOLDER = pathlib.Path(__file__).parent / "django_oemof" / "tests"
+TEST_FOLDER = pathlib.Path(__file__).parent
 TEST_PATH = "django_oemof.tests"
 
 INSTALLED_APPS = (
