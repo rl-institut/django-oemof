@@ -1,7 +1,7 @@
 """Module to calculate oemof results"""
 
 import inspect
-from typing import Union
+from typing import Union, Type
 import pandas
 
 from oemoflex.postprocessing import core, postprocessing
@@ -16,7 +16,7 @@ CALCULATIONS = {
 }
 
 
-def register_calculation(*calculations: core.Calculation):
+def register_calculation(*calculations: Type[core.Calculation]):
     """
     Custom calculations have to be registered first, in order to use them via API
     """
