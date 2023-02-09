@@ -67,7 +67,12 @@ def get_results(
         for calculation in calculations:
             if calculation in results:
                 continue
-            result = CALCULATIONS[calculation](calculator).result
+            calculation_cls = CALCULATIONS[calculation]
+            if isinstance(calculation_cls, core.ParametrizedCalculation):
+                parameters = calculation_cls.parameters or {}
+                result = calculation_cls.calculation(calculator, **parameters).result
+            else:
+                result = calculation_cls(calculator).result
             models.Result(
                 simulation=sim,
                 name=calculation,
