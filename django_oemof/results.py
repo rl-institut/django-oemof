@@ -1,7 +1,7 @@
 """Module to calculate oemof results"""
 
 import inspect
-from typing import Union, Type
+from typing import Union, Type, Dict
 import pandas
 
 from oemoflex.postprocessing import core, postprocessing
@@ -9,19 +9,19 @@ from oemoflex.postprocessing import core, postprocessing
 from . import simulation, models
 
 
-CALCULATIONS = {
-    member.name: member
+CALCULATIONS: Dict[str, Union[Type[core.Calculation], core.ParametrizedCalculation]] = {
+    core.get_dependency_name(member): member
     for (name, member) in inspect.getmembers(postprocessing)
     if inspect.isclass(member) and not inspect.isabstract(member) and issubclass(member, core.Calculation)
 }
 
 
-def register_calculation(*calculations: Type[core.Calculation]):
+def register_calculation(*calculations: Union[Type[core.Calculation], core.ParametrizedCalculation]):
     """
     Custom calculations have to be registered first, in order to use them via API
     """
     for calculation in calculations:
-        CALCULATIONS[calculation.name] = calculation
+        CALCULATIONS[core.get_dependency_name(calculation)] = calculation
 
 
 def get_results(
