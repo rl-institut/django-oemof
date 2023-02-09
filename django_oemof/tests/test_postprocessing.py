@@ -13,7 +13,7 @@ class TestCalculation(core.Calculation):
     """Example calculation for testing"""
 
     name = "test"
-    depends_on = {"summed_flows": postprocessing.SummedFlows}
+    depends_on = {"summed_flows": postprocessing.AggregatedFlows}
 
     def calculate_result(self):
         return self.dependency("summed_flows") * 5
@@ -30,7 +30,7 @@ class PostprocessingTest(SimpleTestCase):
     def test_postprocessing(self):
         """Tests postprocessing of oemof simulation"""
         sim = simulation.simulate_scenario(OEMOF_DATAPACKAGE, parameters={})
-        calculator = postprocessing.Calculator(*sim.dataset.restore_results())
+        calculator = core.Calculator(*sim.dataset.restore_results())
         total_system_costs = postprocessing.TotalSystemCosts(calculator)
         print(total_system_costs.result)
         assert not total_system_costs.result.empty

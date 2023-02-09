@@ -63,7 +63,7 @@ def get_results(
 
     if any(calculation not in results for calculation in calculations):
         sim = simulation.simulate_scenario(scenario, parameters)
-        calculator = postprocessing.Calculator(*sim.dataset.restore_results())
+        calculator = core.Calculator(*sim.dataset.restore_results())
         for calculation in calculations:
             if calculation in results:
                 continue
