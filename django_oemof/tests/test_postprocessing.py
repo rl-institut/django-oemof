@@ -13,7 +13,7 @@ class TestCalculation(core.Calculation):
     """Example calculation for testing"""
 
     name = "test"
-    depends_on = [postprocessing.SummedFlows]
+    depends_on = {"summed_flows": postprocessing.SummedFlows}
 
     def calculate_result(self):
         return self.dependency("summed_flows") * 5
