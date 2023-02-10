@@ -1,4 +1,5 @@
 """Views for django_oemof"""
+import json
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,7 +25,8 @@ class SimulateEnergysystem(APIView):
         Response
         """
         scenario = request.GET["scenario"]
-        parameters = request.GET.get("parameters", {})
+        parameters_raw = request.GET.get("parameters")
+        parameters = json.loads(parameters_raw) if parameters_raw else {}
         simulation.simulate_scenario(scenario, parameters)
         return Response()
 
