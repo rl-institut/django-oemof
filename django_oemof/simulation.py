@@ -9,7 +9,7 @@ from oemof import solph
 from oemof.network.energy_system import EnergySystem
 from oemof.tabular.facades import TYPEMAP
 
-from django_oemof import models
+from django_oemof import models, hooks
 
 
 class SimulationError(Exception):
@@ -33,7 +33,7 @@ def simulate_scenario(scenario: str, parameters: dict):
     Returns
     -------
     simulation: models.Simulation
-        Simulation instance
+        Instance of Simulation
     """
     try:
         simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
@@ -41,7 +41,8 @@ def simulate_scenario(scenario: str, parameters: dict):
         oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
         energysystem = build_energysystem(oemof_datapackage)
         energysystem = adapt_energysystem(energysystem, parameters)
-        input_data, results_data = multiprocess_simulation(energysystem)
+        energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
+        input_data, results_data = multiprocess_simulation(scenario, energysystem)
         dataset = models.OemofDataset.store_results(input_data, results_data)
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
@@ -94,7 +95,7 @@ def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
     return energysystem
 
 
-def multiprocess_simulation(energysystem):
+def multiprocess_simulation(scenario, energysystem):
     """
     Starts multiprocessed simulation of Oemof energysystem
 
@@ -102,6 +103,8 @@ def multiprocess_simulation(energysystem):
 
     Parameters
     ----------
+    scenario: str
+        Name of current scenario
     energysystem: EnergySystem
         Energysystem which shall be optimized
 
@@ -111,14 +114,14 @@ def multiprocess_simulation(energysystem):
         Primary key of stored OemofDataset
     """
     queue = mp.Queue()
-    process = mp.Process(target=simulate_and_store_results, args=(queue, energysystem))
+    process = mp.Process(target=simulate_and_store_results, args=(queue, scenario, energysystem))
     process.start()
     results = queue.get()
     process.join()
     return results
 
 
-def simulate_and_store_results(queue, energysystem):
+def simulate_and_store_results(queue, scenario, energysystem):
     """
     Simulates energysystem and stores data in database
 
@@ -126,19 +129,23 @@ def simulate_and_store_results(queue, energysystem):
     ----------
     queue: Queue
         Multiprocessing queue to put results on
+    scenario: str
+        Name of current scenario
     energysystem: EnergySystem
         Oemof Energysystem to simulate
     """
-    results = simulate_energysystem(energysystem)
+    results = simulate_energysystem(scenario, energysystem)
     queue.put(results)
 
 
-def simulate_energysystem(energysystem):
+def simulate_energysystem(scenario, energysystem):
     """
     Simulates ES, stores results to DB and returns simulation ID
 
     Parameters
     ----------
+    scenario: str
+        Name of current scenario (used to apply hooks)
     energysystem : EnergySystem
         Built energysystem to be solved
 
@@ -148,6 +155,7 @@ def simulate_energysystem(energysystem):
         Simulation input and results
     """
     model = solph.Model(energysystem)
+    model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
     model.solve(solver="cbc")
 
     input_data = solph.processing.parameter_as_dict(

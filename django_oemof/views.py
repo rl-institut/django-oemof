@@ -4,7 +4,7 @@ import json
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import results, simulation
+from django_oemof import results, simulation, hooks
 
 
 class SimulateEnergysystem(APIView):
@@ -27,6 +27,7 @@ class SimulateEnergysystem(APIView):
         scenario = request.GET["scenario"]
         parameters_raw = request.GET.get("parameters")
         parameters = json.loads(parameters_raw) if parameters_raw else {}
+        parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         simulation.simulate_scenario(scenario, parameters)
         return Response()
 
@@ -49,7 +50,9 @@ class CalculateResults(APIView):
         Response
         """
         scenario = request.GET["scenario"]
-        parameters = request.GET.get("parameters", {})
+        parameters_raw = request.GET.get("parameters")
+        parameters = json.loads(parameters_raw) if parameters_raw else {}
+        parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         calculations = request.GET.getlist("calculations")
         calculated_results = results.get_results(scenario, parameters, calculations)
         return Response(calculated_results)
