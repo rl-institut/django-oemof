@@ -1,10 +1,18 @@
 """Hooks can be used to change default behaviour of parameter, ES or model setup."""
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Union
 from enum import IntEnum
 
 from django_oemof import settings
+
+
+# pylint:disable=R0903
+class AllScenarios:
+    """Used to apply hook to all scenarios"""
+
+
+ALL_SCENARIOS = AllScenarios()
 
 
 class HookType(IntEnum):
@@ -19,7 +27,7 @@ class HookType(IntEnum):
 class Hook:
     """Hook class is used to set up a hook for specific scenario"""
 
-    scenario: str
+    scenario: Union[str, AllScenarios]
     function: Callable
 
 
@@ -31,7 +39,7 @@ def register_hook(hook_type: HookType, hook: Hook):
 def apply_hooks(hook_type: HookType, scenario: str, data):
     """Applies hooks for given hook type and scenario"""
     for hook in settings.HOOKS[hook_type]:
-        if hook.scenario != scenario:
+        if hook.scenario != scenario and hook.scenario is not ALL_SCENARIOS:
             continue
         data = hook.function(data)
     return data

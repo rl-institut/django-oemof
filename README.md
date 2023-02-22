@@ -36,7 +36,7 @@ Name of datapackage folder is used in request for building ES.
 Hooks can be used to change default behaviour of parameter setup, energysystem build and model solving.
 This is done by defining custom functions which can be registered in django_oemof and are applied when simulating an ES.
 Depending on hook type (Parameter/Energysystem/Model), the defined custom functions are applied to parameters, build Es or after creating the model.
-Every hook is scenario-dependent to allow different hooks per scenario.
+Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario to aplly hook to all scenarios.
 An example hook (changing default behaviour of parameter setup) could be set up as follows:
 
 ```python
