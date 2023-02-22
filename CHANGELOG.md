@@ -6,11 +6,11 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
-## [Unreleased]
+## [0.2.0] - 2023-02-22
 ### Added
 - hooks for parameters, energysystem and model
 
-## [0.1.0]
+## [0.1.0] - 2023-01-01
 ### Added
 - oemof ES can be built using datapackages
 - energysystem build can be adapted using user parameters
