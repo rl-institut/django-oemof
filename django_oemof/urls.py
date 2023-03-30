@@ -7,9 +7,11 @@ from django_oemof import views
 
 router = DefaultRouter()
 
+# pylint:disable=C0103
+app_name = "django_oemof"
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("simulate", views.SimulateEnergysystem.as_view()),
+    path("simulate", views.SimulateEnergysystem.as_view(), name="simulate"),
     path("calculate", views.CalculateResults.as_view()),
 ]
