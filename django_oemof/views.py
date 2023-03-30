@@ -27,7 +27,9 @@ class SimulateEnergysystem(APIView):
         scenario = request.POST["scenario"]
         parameters_raw = request.POST.get("parameters")
         parameters = json.loads(parameters_raw) if parameters_raw else {}
-        parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
+        parameters = hooks.apply_hooks(
+            hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
+        )
         simulation.simulate_scenario(scenario, parameters)
         return Response()
 

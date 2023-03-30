@@ -40,7 +40,8 @@ def simulate_scenario(scenario: str, parameters: dict):
     except models.Simulation.DoesNotExist:  # pylint: disable=E1101
         oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
         energysystem = build_energysystem(oemof_datapackage)
-        energysystem = adapt_energysystem(energysystem, parameters)
+        build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
+        energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
         input_data, results_data = multiprocess_simulation(scenario, energysystem)
         dataset = models.OemofDataset.store_results(input_data, results_data)
