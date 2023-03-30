@@ -6,6 +6,11 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.3.0] - 2023-03-30
+### Added
+- setup hook which differentiates parameter setup from bild parameters
+- namespace for django-oemof app
+
 ## [0.2.0] - 2023-02-22
 ### Added
 - hooks for parameters, energysystem and model
