@@ -11,7 +11,7 @@ class SimulateEnergysystem(APIView):
     """View to build and simulate Oemof energysystem from datapackage"""
 
     @staticmethod
-    def get(request):
+    def post(request):
         """
         Simulates ES given by scenario and parameters
 
@@ -24,8 +24,8 @@ class SimulateEnergysystem(APIView):
         -------
         Response
         """
-        scenario = request.GET["scenario"]
-        parameters_raw = request.GET.get("parameters")
+        scenario = request.POST["scenario"]
+        parameters_raw = request.POST.get("parameters")
         parameters = json.loads(parameters_raw) if parameters_raw else {}
         parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         simulation.simulate_scenario(scenario, parameters)
