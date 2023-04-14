@@ -6,6 +6,13 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.4.0] - 2023-04-14
+### Added
+- simulation ID is returned in simulation view  after successful simulation run
+
+## Changed
+- simulation ID is used to look up results and calculations
+
 ## [0.3.0] - 2023-03-30
 ### Added
 - setup hook which differentiates parameter setup from bild parameters
