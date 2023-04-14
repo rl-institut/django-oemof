@@ -24,9 +24,7 @@ def register_calculation(*calculations: Union[Type[core.Calculation], core.Param
         CALCULATIONS[core.get_dependency_name(calculation)] = calculation
 
 
-def get_results(
-    scenario: str, parameters: dict, calculations: list[str]
-) -> dict[str, Union[pandas.Series, pandas.DataFrame]]:
+def get_results(simulation_id: int, calculations: list[str]) -> dict[str, Union[pandas.Series, pandas.DataFrame]]:
     """
     Tries to load results from database.
     If result is not found, simulation data is loaded from db or simulated (if not in DB yet)
@@ -34,10 +32,8 @@ def get_results(
 
     Parameters
     ----------
-    scenario : dict
-        Scenario name
-    parameters : dict
-        Adapted parameters
+    simulation_id : int
+        ID if simulation
     calculations : list[str]
         List of calculations (by name) which shall be calculated
 
@@ -47,10 +43,10 @@ def get_results(
         Dict containing calculation name as key and calculation result as value
     """
     try:
-        sim = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
+        sim = models.Simulation.objects.get(pk=simulation_id)  # pylint: disable=E1101
     except models.Simulation.DoesNotExist:  # pylint: disable=E1101
         # pylint: disable=W0707
-        raise simulation.SimulationError(f"Simulation for {scenario=} with {parameters=} not present in database.")
+        raise simulation.SimulationError(f"Simulation with ID#{simulation_id} not present in database.")
 
     results = {}
     for calculation in calculations:
@@ -62,7 +58,6 @@ def get_results(
         results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
 
     if any(calculation not in results for calculation in calculations):
-        sim = simulation.simulate_scenario(scenario, parameters)
         calculator = core.Calculator(*sim.dataset.restore_results())
         for calculation in calculations:
             if calculation in results:

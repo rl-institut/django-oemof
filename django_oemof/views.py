@@ -52,10 +52,7 @@ class CalculateResults(APIView):
         -------
         Response
         """
-        scenario = request.GET["scenario"]
-        parameters_raw = request.GET.get("parameters")
-        parameters = json.loads(parameters_raw) if parameters_raw else {}
-        parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
+        simulation_id = request.GET["simulation_id"]
         calculations = request.GET.getlist("calculations")
-        calculated_results = results.get_results(scenario, parameters, calculations)
+        calculated_results = results.get_results(simulation_id, calculations)
         return Response(calculated_results)
