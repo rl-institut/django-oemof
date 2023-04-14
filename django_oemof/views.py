@@ -23,6 +23,7 @@ class SimulateEnergysystem(APIView):
         Returns
         -------
         Response
+            containing simulation ID
         """
         scenario = request.POST["scenario"]
         parameters_raw = request.POST.get("parameters")
@@ -30,8 +31,8 @@ class SimulateEnergysystem(APIView):
         parameters = hooks.apply_hooks(
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
         )
-        simulation.simulate_scenario(scenario, parameters)
-        return Response()
+        sim = simulation.simulate_scenario(scenario, parameters)
+        return Response({"simulation_id": sim.id})
 
 
 class CalculateResults(APIView):
