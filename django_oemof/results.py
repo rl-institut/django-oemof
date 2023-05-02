@@ -24,7 +24,9 @@ def register_calculation(*calculations: Union[Type[core.Calculation], core.Param
         CALCULATIONS[core.get_dependency_name(calculation)] = calculation
 
 
-def get_results(simulation_id: int, calculations: list[str]) -> dict[str, Union[pandas.Series, pandas.DataFrame]]:
+def get_results(
+    simulation_id: int, calculations: list[Union[str, Type[core.Calculation], core.ParametrizedCalculation]]
+) -> dict[str, Union[pandas.Series, pandas.DataFrame]]:
     """
     Tries to load results from database.
     If result is not found, simulation data is loaded from db or simulated (if not in DB yet)
@@ -34,8 +36,8 @@ def get_results(simulation_id: int, calculations: list[str]) -> dict[str, Union[
     ----------
     simulation_id : int
         ID if simulation
-    calculations : list[str]
-        List of calculations (by name) which shall be calculated
+    calculations : list[Union[str, Type[core.Calculation], core.ParametrizedCalculation]]
+        List of calculations (by name or class) which shall be calculated
 
     Returns
     -------
@@ -50,19 +52,21 @@ def get_results(simulation_id: int, calculations: list[str]) -> dict[str, Union[
 
     results = {}
     for calculation in calculations:
+        calculation_name = calculation if isinstance(calculation, str) else core.get_dependency_name(calculation)
         try:
-            calculation_instance = sim.results.get(name=calculation)
+            calculation_result = sim.results.get(name=calculation_name)
         except models.Result.DoesNotExist:  # pylint: disable=E1101
             continue
-        result = pandas.read_json(calculation_instance.data, orient="table")
-        results[calculation] = result["values"] if calculation_instance.data_type == "series" else result
+        result = pandas.read_json(calculation_result.data, orient="table")
+        results[calculation_name] = result["values"] if calculation_result.data_type == "series" else result
 
-    if any(calculation not in results for calculation in calculations):
+    if len(results) != len(calculations):
         calculator = core.Calculator(*sim.dataset.restore_results())
         for calculation in calculations:
-            if calculation in results:
+            calculation_name = calculation if isinstance(calculation, str) else core.get_dependency_name(calculation)
+            if calculation_name in results:
                 continue
-            calculation_cls = CALCULATIONS[calculation]
+            calculation_cls = CALCULATIONS[calculation] if isinstance(calculation, str) else calculation
             if isinstance(calculation_cls, core.ParametrizedCalculation):
                 parameters = calculation_cls.parameters or {}
                 result = calculation_cls.calculation(calculator, **parameters).result
@@ -70,9 +74,9 @@ def get_results(simulation_id: int, calculations: list[str]) -> dict[str, Union[
                 result = calculation_cls(calculator).result
             models.Result(
                 simulation=sim,
-                name=calculation,
+                name=calculation_name,
                 data=result.to_json(orient="table"),
                 data_type="series" if isinstance(result, pandas.Series) else "frame",
             ).save()
-            results[calculation] = result
+            results[calculation_name] = result
     return results
