@@ -4,14 +4,14 @@ import inspect
 from typing import Union, Type, Dict
 import pandas
 
-from oemoflex.postprocessing import core, postprocessing
+from oemof.tabular.postprocessing import core, calculations as standard_calculations
 
 from . import simulation, models
 
 
 CALCULATIONS: Dict[str, Union[Type[core.Calculation], core.ParametrizedCalculation]] = {
     core.get_dependency_name(member): member
-    for (name, member) in inspect.getmembers(postprocessing)
+    for (name, member) in inspect.getmembers(standard_calculations)
     if inspect.isclass(member) and not inspect.isabstract(member) and issubclass(member, core.Calculation)
 }
 
@@ -25,7 +25,8 @@ def register_calculation(*calculations: Union[Type[core.Calculation], core.Param
 
 
 def get_results(
-    simulation_id: int, calculations: list[Union[str, Type[core.Calculation], core.ParametrizedCalculation]]
+    simulation_id: int,
+    calculations: list[Union[str, Type[core.Calculation], core.ParametrizedCalculation]],
 ) -> dict[str, Union[pandas.Series, pandas.DataFrame]]:
     """
     Tries to load results from database.

@@ -1,10 +1,10 @@
 """Postprocessing test module"""
 
 from django.test import SimpleTestCase
-from oemoflex.postprocessing import core, postprocessing
+from oemof.tabular.postprocessing import calculations, core
 
-from django_oemof import simulation, results as dor
-
+from django_oemof import results as dor
+from django_oemof import simulation
 
 OEMOF_DATAPACKAGE = "test_scenario"
 
@@ -13,7 +13,7 @@ class TestCalculation(core.Calculation):
     """Example calculation for testing"""
 
     name = "test"
-    depends_on = {"summed_flows": postprocessing.AggregatedFlows}
+    depends_on = {"summed_flows": calculations.AggregatedFlows}
 
     def calculate_result(self):
         return self.dependency("summed_flows") * 5
@@ -31,7 +31,7 @@ class PostprocessingTest(SimpleTestCase):
         """Tests postprocessing of oemof simulation"""
         sim = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
         calculator = core.Calculator(*sim.dataset.restore_results())
-        total_system_costs = postprocessing.TotalSystemCosts(calculator)
+        total_system_costs = calculations.TotalSystemCosts(calculator)
         print(total_system_costs.result)
         assert not total_system_costs.result.empty
 
