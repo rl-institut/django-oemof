@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.6.0] - 2023-05-22
+### Changed
+- switched to oemof.tabular (instead of using postprocessing from oemoflex)
+
 ## [0.5.0] - 2023-05-02
 ### Added
 - oemof results can be gathered using calculation class instead of name

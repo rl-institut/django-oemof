@@ -1,3 +1,3 @@
 """Init of django_oemof app, holds version"""
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
