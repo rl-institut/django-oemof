@@ -1,12 +1,11 @@
 """Simulation module"""
-
+import logging
 import multiprocessing as mp
 
 # pylint: disable=W0611
 import oemof.tabular.datapackage  # noqa
 from django.conf import settings
 from oemof import solph
-from oemof.network.energy_system import EnergySystem
 from oemof.tabular.facades import TYPEMAP
 
 from django_oemof import models, hooks
@@ -38,6 +37,7 @@ def simulate_scenario(scenario: str, parameters: dict):
     try:
         simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
     except models.Simulation.DoesNotExist:  # pylint: disable=E1101
+        logging.info(f"Simulating energysystem for {scenario=} and {parameters=}.")
         oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
         energysystem = build_energysystem(oemof_datapackage)
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
@@ -48,6 +48,7 @@ def simulate_scenario(scenario: str, parameters: dict):
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
         simulation.save()
+        logging.info(f"Stored simulation results for {scenario=} and {parameters=}.")
     return simulation
 
 
@@ -64,10 +65,11 @@ def build_energysystem(oemof_datapackage: str):
     -------
     energysystem: Energysystem build from datapacakge
     """
-    return EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
+    logging.info(f"Building energysystem from datapackage at '{oemof_datapackage}'.")
+    return solph.EnergySystem.from_datapackage(oemof_datapackage, typemap=TYPEMAP)
 
 
-def adapt_energysystem(energysystem: EnergySystem, parameters: dict):
+def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     """
     Adapt parameters in ES
 
@@ -155,9 +157,11 @@ def simulate_energysystem(scenario, energysystem):
     results : tuple(dict, dict)
         Simulation input and results
     """
+    logging.info(f"Starting simulation for {scenario=}...")
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
     model.solve(solver="cbc")
+    logging.info(f"Simulation for {scenario=} finished.")
 
     input_data = solph.processing.parameter_as_dict(
         energysystem,
