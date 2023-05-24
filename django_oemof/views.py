@@ -3,6 +3,7 @@ import json
 
 from celery.result import AsyncResult
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 
 from django_oemof import hooks, results, simulation
@@ -30,7 +31,7 @@ class SimulateEnergysystem(APIView):
         task = AsyncResult(task_id)
         if task.ready():
             return Response({"simulation_id": task.get()})
-        return Response({"simulation_id": None})
+        raise NotFound("Simulation not yet ready.")
 
     @staticmethod
     def post(request):
