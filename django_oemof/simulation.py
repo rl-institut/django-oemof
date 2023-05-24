@@ -16,7 +16,7 @@ class SimulationError(Exception):
 
 
 @shared_task
-def simulate_scenario(scenario: str, parameters: dict):
+def simulate_scenario(scenario: str, parameters: dict) -> int:
     """
     Returns ID to oemof results from simulated/restored scenario
 
@@ -32,8 +32,8 @@ def simulate_scenario(scenario: str, parameters: dict):
 
     Returns
     -------
-    simulation: models.Simulation
-        Instance of Simulation
+    int
+        Simulation ID where results are stored
     """
     try:
         simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
