@@ -1,20 +1,21 @@
 """Simulation module"""
 import logging
-import multiprocessing as mp
 
 # pylint: disable=W0611
 import oemof.tabular.datapackage  # noqa
+from celery import shared_task
 from django.conf import settings
 from oemof import solph
 from oemof.tabular.facades import TYPEMAP
 
-from django_oemof import models, hooks
+from django_oemof import hooks, models
 
 
 class SimulationError(Exception):
     """Raised if simulation failed or simulation is not present"""
 
 
+@shared_task
 def simulate_scenario(scenario: str, parameters: dict):
     """
     Returns ID to oemof results from simulated/restored scenario
@@ -43,7 +44,7 @@ def simulate_scenario(scenario: str, parameters: dict):
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
-        input_data, results_data = multiprocess_simulation(scenario, energysystem)
+        input_data, results_data = simulate_energysystem(scenario, energysystem)
         dataset = models.OemofDataset.store_results(input_data, results_data)
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
@@ -96,49 +97,6 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
         energysystem.groups[group].update()
 
     return energysystem
-
-
-def multiprocess_simulation(scenario, energysystem):
-    """
-    Starts multiprocessed simulation of Oemof energysystem
-
-    Multiprocessing is needed as pyomo solver must be run in main thread
-
-    Parameters
-    ----------
-    scenario: str
-        Name of current scenario
-    energysystem: EnergySystem
-        Energysystem which shall be optimized
-
-    Returns
-    -------
-    result_id: int
-        Primary key of stored OemofDataset
-    """
-    queue = mp.Queue()
-    process = mp.Process(target=simulate_and_store_results, args=(queue, scenario, energysystem))
-    process.start()
-    results = queue.get()
-    process.join()
-    return results
-
-
-def simulate_and_store_results(queue, scenario, energysystem):
-    """
-    Simulates energysystem and stores data in database
-
-    Parameters
-    ----------
-    queue: Queue
-        Multiprocessing queue to put results on
-    scenario: str
-        Name of current scenario
-    energysystem: EnergySystem
-        Oemof Energysystem to simulate
-    """
-    results = simulate_energysystem(scenario, energysystem)
-    queue.put(results)
 
 
 def simulate_energysystem(scenario, energysystem):

@@ -1,14 +1,36 @@
 """Views for django_oemof"""
 import json
 
+from celery.result import AsyncResult
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import results, simulation, hooks
+from django_oemof import hooks, results, simulation
 
 
 class SimulateEnergysystem(APIView):
     """View to build and simulate Oemof energysystem from datapackage"""
+
+    @staticmethod
+    def get(request):
+        """
+        Checks simulation run using celery task ID
+
+        Parameters
+        ----------
+        request
+            Holding celery task ID
+
+        Returns
+        -------
+        Response
+            holding simulation ID if simulation is ready, otherwise simulation ID is None
+        """
+        task_id = request.GET["task_id"]
+        task = AsyncResult(task_id)
+        if task.ready():
+            return Response({"simulation_id": task.get()})
+        return Response({"simulation_id": None})
 
     @staticmethod
     def post(request):
@@ -18,12 +40,12 @@ class SimulateEnergysystem(APIView):
         Parameters
         ----------
         request
-            Request
+            Request holding scenario and parameters as JSON
 
         Returns
         -------
         Response
-            containing simulation ID
+            holding celery task ID
         """
         scenario = request.POST["scenario"]
         parameters_raw = request.POST.get("parameters")
@@ -31,8 +53,8 @@ class SimulateEnergysystem(APIView):
         parameters = hooks.apply_hooks(
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
         )
-        sim = simulation.simulate_scenario(scenario, parameters)
-        return Response({"simulation_id": sim.id})
+        task = simulation.simulate_scenario.delay(scenario, parameters)
+        return Response({"task_id": task.task_id})
 
 
 class CalculateResults(APIView):
