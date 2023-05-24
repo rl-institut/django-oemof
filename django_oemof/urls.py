@@ -13,5 +13,6 @@ app_name = "django_oemof"
 urlpatterns = [
     path("", include(router.urls)),
     path("simulate", views.SimulateEnergysystem.as_view(), name="simulate"),
+    path("terminate", views.TerminateSimulationView.as_view()),
     path("calculate", views.CalculateResults.as_view()),
 ]

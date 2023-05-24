@@ -59,8 +59,12 @@ class SimulateEnergysystem(APIView):
         logging.info(f"Started simulation task #{task.task_id}.")
         return Response({"task_id": task.task_id})
 
+
+class TerminateSimulationView(APIView):
+    """View to terminate Oemof simulation run"""
+
     @staticmethod
-    def delete(request):
+    def post(request):
         """
         Delete task for given task ID
 
@@ -74,7 +78,7 @@ class SimulateEnergysystem(APIView):
         Response
             whether task deletion has been successful
         """
-        task_id = request.DELETE["task_id"]
+        task_id = request.POST["task_id"]
         task = AsyncResult(task_id)
         task.revoke(terminate=True)
         logging.info(f"Terminated task #{task_id}.")
