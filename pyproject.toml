@@ -10,9 +10,10 @@ packages = [{include = "django_oemof"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 django-environ = "^0.10.0"  # https://github.com/joke2k/django-environ
-boto3 = ">=1.26"
+boto3 = "1.26.137" # Fixed as it is unused and causes long updating time in poetry/pip
 "oemof.tabular" = {git = "https://github.com/oemof/oemof-tabular.git", rev = "feature/postprocessing"}
 djangorestframework = "^3.14.0"
+celery = "^5.1.2"
 
 
 [tool.poetry.group.dev.dependencies]
