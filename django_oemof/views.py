@@ -74,7 +74,7 @@ class SimulateEnergysystem(APIView):
         Response
             whether task deletion has been successful
         """
-        task_id = request.GET["task_id"]
+        task_id = request.DELETE["task_id"]
         task = AsyncResult(task_id)
         task.revoke(terminate=True)
         logging.info(f"Terminated task #{task_id}.")
