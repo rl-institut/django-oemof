@@ -1,5 +1,6 @@
 """Views for django_oemof"""
 import json
+import logging
 
 from celery.result import AsyncResult
 from rest_framework.response import Response
@@ -29,6 +30,7 @@ class SimulateEnergysystem(APIView):
         task_id = request.GET["task_id"]
         task = AsyncResult(task_id)
         if task.ready():
+            logging.info(f"Task #{task.task_id} finished.")
             return Response({"simulation_id": task.get()})
         return Response({"simulation_id": None})
 
@@ -54,7 +56,29 @@ class SimulateEnergysystem(APIView):
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
         )
         task = simulation.simulate_scenario.delay(scenario, parameters)
+        logging.info(f"Started simulation task #{task.task_id}.")
         return Response({"task_id": task.task_id})
+
+    @staticmethod
+    def delete(request):
+        """
+        Delete task for given task ID
+
+        Parameters
+        ----------
+        request
+            Holding celery task ID
+
+        Returns
+        -------
+        Response
+            whether task deletion has been successful
+        """
+        task_id = request.GET["task_id"]
+        task = AsyncResult(task_id)
+        task.revoke(terminate=True)
+        logging.info(f"Terminated task #{task_id}.")
+        return Response()
 
 
 class CalculateResults(APIView):
