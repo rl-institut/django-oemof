@@ -50,7 +50,7 @@ def simulate_scenario(scenario: str, parameters: dict):
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
         simulation.save()
         logging.info(f"Stored simulation results for {scenario=} and {parameters=}.")
-    return simulation
+    return simulation.id
 
 
 def build_energysystem(oemof_datapackage: str):
