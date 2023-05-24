@@ -9,6 +9,8 @@ CBC solver has to be installed. Install it via (conda):
 conda install -c conda-forge coincbc
 ```
 
+Django project must use celery and automatically detect celery tasks.
+
 ## Quick start
 
 1. Add "oemof" to your INSTALLED_APPS setting like this::
