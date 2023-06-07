@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-oemof"
-version = "0.7.0"
+version = "0.7.1"
 description = "Django application to run oemof"
 authors = ["Hendrik Huyskens <hendrik.huyskens@rl-institut.de>"]
 license = "AGPL-3.0"
