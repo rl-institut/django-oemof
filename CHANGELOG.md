@@ -6,6 +6,14 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.8.0] - 2023-06-08
+### Added
+- warning if component cannot be found during ES adaption
+- warning if attribute of component cannot be found during ES adaption
+
+### Fixed
+- skip component if component can not be found during ES adaption
+
 ## [0.7.1] - 2023-06-07
 ### Added
 - logging info when hook is applied

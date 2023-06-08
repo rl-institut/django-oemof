@@ -92,7 +92,15 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
 
     # Very simple attribute adaption of parameters - may be too simple in case of more complex facades
     for group, attributes in parameters.items():
+        if group not in energysystem.groups:
+            logging.warning(f"Cannot adapt component '{group}', as it cannot be found in energysystem.")
+            continue
         for attribute, value in attributes.items():
+            if not hasattr(energysystem.groups[group], attribute):
+                logging.warning(
+                    f"Attribute '{attribute}' not found in component '{group}' in energysystem. "
+                    "Adapting the attribute might have no effect."
+                )
             setattr(energysystem.groups[group], attribute, value)
         energysystem.groups[group].update()
 
