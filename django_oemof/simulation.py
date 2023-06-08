@@ -37,6 +37,7 @@ def simulate_scenario(scenario: str, parameters: dict) -> int:
     """
     try:
         simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)  # pylint: disable=E1101
+        logging.info(f"Simulation for {scenario=} and {parameters=} already present.")
     except models.Simulation.DoesNotExist:  # pylint: disable=E1101
         logging.info(f"Simulating energysystem for {scenario=} and {parameters=}.")
         oemof_datapackage = f"{settings.MEDIA_ROOT}/oemof/{scenario}/datapackage.json"
