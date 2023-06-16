@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.10.0] - 2023-06-16
+### Added
+- calculations in `get_results` function can be named in order to get more readable results
+
 ## [0.9.0] - 2023-06-16
 ### Changed
 - result model name length to text field (no char limit)
