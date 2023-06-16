@@ -6,6 +6,13 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.9.0] - 2023-06-16
+### Changed
+- result model name length to text field (no char limit)
+
+### Fixed
+- too short names for results with many parameters
+
 ## [0.8.0] - 2023-06-08
 ### Added
 - warning if component cannot be found during ES adaption

@@ -154,6 +154,6 @@ class Result(models.Model):
     """Model to store results from postprocessing"""
 
     simulation = models.ForeignKey("Simulation", related_name="results", on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.TextField()
     data_type = models.CharField(max_length=9, choices=(("series", "series"), ("frame", "frame")))
     data = models.JSONField()
