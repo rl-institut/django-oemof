@@ -1,5 +1,6 @@
 """Simulation module"""
 import logging
+from typing import Optional
 
 # pylint: disable=W0611
 import oemof.tabular.datapackage  # noqa
@@ -16,7 +17,7 @@ class SimulationError(Exception):
 
 
 @shared_task
-def simulate_scenario(scenario: str, parameters: dict) -> int:
+def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = None) -> int:
     """
     Returns ID to oemof results from simulated/restored scenario
 
@@ -29,6 +30,8 @@ def simulate_scenario(scenario: str, parameters: dict) -> int:
         Name of scenario (used to load related datapackage)
     parameters: dict
         Parameters which are adapted to ES before simulation
+    lp_file: Optional[str]
+        If set, LP file is stored under given path
 
     Returns
     -------
@@ -45,7 +48,7 @@ def simulate_scenario(scenario: str, parameters: dict) -> int:
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
-        input_data, results_data = simulate_energysystem(scenario, energysystem)
+        input_data, results_data = simulate_energysystem(scenario, energysystem, lp_file)
         dataset = models.OemofDataset.store_results(input_data, results_data)
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
@@ -108,7 +111,7 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     return energysystem
 
 
-def simulate_energysystem(scenario, energysystem):
+def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None):
     """
     Simulates ES, stores results to DB and returns simulation ID
 
@@ -118,6 +121,8 @@ def simulate_energysystem(scenario, energysystem):
         Name of current scenario (used to apply hooks)
     energysystem : EnergySystem
         Built energysystem to be solved
+    lp_file: Optional[str]
+        If set, LP file is stored under given path
 
     Returns
     -------
@@ -128,6 +133,8 @@ def simulate_energysystem(scenario, energysystem):
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
     model.solve(solver="cbc")
+    if lp_file:
+        model.write(lp_file, io_options={'symbolic_solver_labels': True})
     logging.info(f"Simulation for {scenario=} finished.")
 
     input_data = solph.processing.parameter_as_dict(

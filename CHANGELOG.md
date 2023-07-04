@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.10.1] - 2023-07-04
+### Added
+- option to store LP file in simulation run
+
 ## [0.10.0] - 2023-06-16
 ### Added
 - calculations in `get_results` function can be named in order to get more readable results
