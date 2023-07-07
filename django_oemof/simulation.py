@@ -92,9 +92,41 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     -------
     energysystem: Energysystem with changed parameters
     """
+
+    def adapt_flow():
+        """Set flow attributes in case of input/output attributes of parent component"""
+        if "input" in attribute:
+            inout = "input"
+            if len(energysystem.groups[group].inputs) > 1:
+                raise SimulationError(
+                    f"Cannot adapt input parameters for {group=} automatically (more than one input)."
+                )
+            from_node = list(energysystem.groups[group].inputs.keys())[0].label
+            to_node = group
+        else:
+            inout = "output"
+            if len(energysystem.groups[group].outputs) > 1:
+                raise SimulationError(
+                    f"Cannot adapt output parameters for {group=} automatically (more than one output)."
+                )
+            from_node = group
+            to_node = list(energysystem.groups[group].outputs.keys())[0].label
+        flow_tuple = next(
+            g
+            for g in energysystem.groups[oemof.solph.blocks.flow.Flow]
+            if g[0].label == from_node and g[1].label == to_node
+        )
+        for attr, val in value.items():
+            if not hasattr(flow_tuple[2], attr):
+                logging.warning(
+                    f"Attribute '{attr}' not found in {inout} flow of component '{group}' in energysystem. "
+                    "Adapting the attribute might have no effect."
+                )
+            logging.info(f"Setting {inout} flow attribute '{attr}' from '{from_node}' to '{to_node}'")
+            setattr(flow_tuple[2], attr, val)
+
     parameters = parameters or {}
 
-    # Very simple attribute adaption of parameters - may be too simple in case of more complex facades
     for group, attributes in parameters.items():
         if group not in energysystem.groups:
             logging.warning(f"Cannot adapt component '{group}', as it cannot be found in energysystem.")
@@ -105,6 +137,8 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
                     f"Attribute '{attribute}' not found in component '{group}' in energysystem. "
                     "Adapting the attribute might have no effect."
                 )
+            if attribute in ("input_parameters", "output_parameters"):
+                adapt_flow()
             setattr(energysystem.groups[group], attribute, value)
         energysystem.groups[group].update()
 
@@ -134,7 +168,7 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
     model.solve(solver="cbc")
     if lp_file:
-        model.write(lp_file, io_options={'symbolic_solver_labels': True})
+        model.write(lp_file, io_options={"symbolic_solver_labels": True})
     logging.info(f"Simulation for {scenario=} finished.")
 
     input_data = solph.processing.parameter_as_dict(
