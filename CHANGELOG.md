@@ -6,9 +6,16 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
-## [0.11.0] - 2023-07-07
+## [0.12.0] - 2023-07-12
+### Added
+- manual adaption of flow attributes
+
 ### Fixed
-- energysystem adaption of flow attributes
+- automatic energysystem adaption of flow attributes
+
+## [0.11.0] - 2023-07-07
+### Added
+- automatic energysystem adaption of flow attributes
 
 ## [0.10.1] - 2023-07-04
 ### Added

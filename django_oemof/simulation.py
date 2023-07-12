@@ -1,6 +1,7 @@
 """Simulation module"""
 import logging
 from typing import Optional
+from collections import namedtuple
 
 # pylint: disable=W0611
 import oemof.tabular.datapackage  # noqa
@@ -10,6 +11,9 @@ from oemof import solph
 from oemof.tabular.facades import TYPEMAP
 
 from django_oemof import hooks, models
+
+
+FlowAttribute = namedtuple("FlowAttribute", ("from_node", "to_node", "attribute", "value"))
 
 
 class SimulationError(Exception):
@@ -93,41 +97,48 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     energysystem: Energysystem with changed parameters
     """
 
-    def adapt_flow():
+    def auto_adapt_flow():
         """Set flow attributes in case of input/output attributes of parent component"""
         if "input" in attribute:
-            inout = "input"
             if len(energysystem.groups[group].inputs) > 1:
-                raise SimulationError(
-                    f"Cannot adapt input parameters for {group=} automatically (more than one input)."
+                logging.warning(
+                    f"Cannot adapt input parameters for {group=} automatically (more than one input). You must set it manually, using 'flow' group."
                 )
+                return
             from_node = list(energysystem.groups[group].inputs.keys())[0].label
             to_node = group
         else:
-            inout = "output"
             if len(energysystem.groups[group].outputs) > 1:
-                raise SimulationError(
-                    f"Cannot adapt output parameters for {group=} automatically (more than one output)."
+                logging.warning(
+                    f"Cannot adapt output parameters for {group=} automatically (more than one output). You must set it manually, using 'flow' group."
                 )
+                return
             from_node = group
             to_node = list(energysystem.groups[group].outputs.keys())[0].label
+        for attr, val in value.items():
+            adapt_flow(FlowAttribute(from_node, to_node, attr, val))
+
+    def adapt_flow(flow: FlowAttribute):
         flow_tuple = next(
             g
             for g in energysystem.groups[oemof.solph.blocks.flow.Flow]
-            if g[0].label == from_node and g[1].label == to_node
+            if g[0].label == flow.from_node and g[1].label == flow.to_node
         )
-        for attr, val in value.items():
-            if not hasattr(flow_tuple[2], attr):
-                logging.warning(
-                    f"Attribute '{attr}' not found in {inout} flow of component '{group}' in energysystem. "
-                    "Adapting the attribute might have no effect."
-                )
-            logging.info(f"Setting {inout} flow attribute '{attr}' from '{from_node}' to '{to_node}'")
-            setattr(flow_tuple[2], attr, val)
+        if not hasattr(flow_tuple[2], flow.attribute):
+            logging.warning(
+                f"Attribute '{flow.attribute}' not found in flow of component '{group}' in energysystem. "
+                "Adapting the attribute might have no effect."
+            )
+        logging.info(f"Setting flow attribute '{flow.attribute}' from '{flow.from_node}' to '{flow.to_node}'")
+        setattr(flow_tuple[2], flow.attribute, flow.value)
 
     parameters = parameters or {}
 
     for group, attributes in parameters.items():
+        if group == "flow":
+            for flow_attribute in attributes:
+                adapt_flow(flow_attribute)
+            continue
         if group not in energysystem.groups:
             logging.warning(f"Cannot adapt component '{group}', as it cannot be found in energysystem.")
             continue
@@ -138,7 +149,7 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
                     "Adapting the attribute might have no effect."
                 )
             if attribute in ("input_parameters", "output_parameters"):
-                adapt_flow()
+                auto_adapt_flow()
             setattr(energysystem.groups[group], attribute, value)
         energysystem.groups[group].update()
 
