@@ -94,9 +94,9 @@ class OemofDataset(models.Model):
         def type_conversion(value_str, value_type):
             if value_type == "str":
                 return value_str
-            if value_type == "float":
+            if value_type in ("float", "float64"):
                 return float(value_str)
-            if value_type == "int":
+            if value_type in ("int", "int64"):
                 return int(value_str)
             if value_type == "bool":
                 return bool(value_str)
