@@ -72,7 +72,7 @@ def get_results(
         except models.Result.DoesNotExist:  # pylint: disable=E1101
             continue
         result = pandas.read_json(calculation_result.data, orient="table")
-        results[calculation_result_name] = result["values"] if calculation_result.data_type == "series" else result
+        results[calculation_result_name] = result.iloc[:, 0] if calculation_result.data_type == "series" else result
 
     if len(results) != len(calculations):
         calculator = core.Calculator(*sim.dataset.restore_results())
