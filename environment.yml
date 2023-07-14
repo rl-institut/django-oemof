@@ -1,3 +1,6 @@
 name: django_oemof
+channels:
+  - conda-forge
 dependencies:
 - python=3.9
+- coincbc
