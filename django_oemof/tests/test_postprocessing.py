@@ -4,7 +4,7 @@ from django.test import SimpleTestCase
 from oemof.tabular.postprocessing import calculations, core
 
 from django_oemof import results as dor
-from django_oemof import simulation
+from django_oemof import simulation, models
 
 OEMOF_DATAPACKAGE = "test_scenario"
 
@@ -29,7 +29,8 @@ class PostprocessingTest(SimpleTestCase):
 
     def test_postprocessing(self):
         """Tests postprocessing of oemof simulation"""
-        sim = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
+        simulation_id = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
+        sim = models.Simulation.objects.get(pk=simulation_id)
         calculator = core.Calculator(*sim.dataset.restore_results())
         total_system_costs = calculations.TotalSystemCosts(calculator)
         print(total_system_costs.result)
@@ -39,8 +40,8 @@ class PostprocessingTest(SimpleTestCase):
         """Tests registration of custom calculation"""
         # Register calculation test:
         dor.register_calculation(TestCalculation)
-        sim = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
-        results = dor.get_results(sim.id, calculations=["test"])
+        simulation_id = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
+        results = dor.get_results(simulation_id, calculations=["test"])
         assert "test" in results
         assert not results["test"].empty
 
@@ -48,8 +49,8 @@ class PostprocessingTest(SimpleTestCase):
         """Tests registration of custom calculation"""
         # Register calculation test:
         dor.register_calculation(TestCalculation)
-        sim = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
-        results = dor.get_results(sim.id, calculations=[TestCalculation])
+        simulation_id = simulation.simulate_scenario(OEMOF_DATAPACKAGE, {})
+        results = dor.get_results(simulation_id, calculations=[TestCalculation])
         assert "test" in results
         assert not results["test"].empty
 

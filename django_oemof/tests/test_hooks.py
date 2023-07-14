@@ -11,13 +11,13 @@ class TestHooks(TestCase):
     def test_parameter_hook(self):
         """Testing multiple hooks but for different scenarios"""
 
-        def parameter_hook_1(data):
+        def parameter_hook_1(scenario, data, request):
             return {key: f"{value}_1" for key, value in data.items()}
 
-        def parameter_hook_2(data):
+        def parameter_hook_2(scenario, data, request):
             return {key: f"{value}_2" for key, value in data.items()}
 
-        def parameter_hook_all(data):
+        def parameter_hook_all(scenario, data, request):
             return {key: f"{value}_all" for key, value in data.items()}
 
         hook1 = hooks.Hook(scenario="1", function=parameter_hook_1)

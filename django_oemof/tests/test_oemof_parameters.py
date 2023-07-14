@@ -12,8 +12,8 @@ from django.test import TransactionTestCase
 
 from django_oemof import simulation
 
-OEMOF_DATAPACKAGE = pathlib.Path(__file__).parent / "test_data" / "dispatch" / "datapackage.json"
-OEMOF_BIG_DATAPACKAGE = pathlib.Path(__file__).parent / "test_data" / "test_scenario" / "datapackage.json"
+OEMOF_DATAPACKAGE = pathlib.Path(__file__).parent / "test_data" / "oemof" / "dispatch" / "datapackage.json"
+OEMOF_BIG_DATAPACKAGE = pathlib.Path(__file__).parent / "test_data" / "oemof" / "test_scenario" / "datapackage.json"
 
 
 class OemofParameterTest(TransactionTestCase):
