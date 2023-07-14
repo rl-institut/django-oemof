@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.13.1] - 2023-07-14
+### Fixed
+- series results with different column name than "values"
+
 ## [0.13.0] - 2023-07-13
 ### Fixed
 - float64 and int64 conversion error in restore results function
