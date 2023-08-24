@@ -121,7 +121,7 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     def adapt_flow(flow: FlowAttribute):
         flow_tuple = next(
             g
-            for g in energysystem.groups[oemof.solph.blocks.flow.Flow]
+            for g in energysystem.groups[oemof.solph.flows._simple_flow_block.SimpleFlowBlock]
             if g[0].label == flow.from_node and g[1].label == flow.to_node
         )
         if not hasattr(flow_tuple[2], flow.attribute):
@@ -177,7 +177,7 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     logging.info(f"Starting simulation for {scenario=}...")
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
-    model.solve(solver="cbc")
+    model.solve(solver="cbc", cmdline_options={"mipgap": "0.1"})
     if lp_file:
         model.write(lp_file, io_options={"symbolic_solver_labels": True})
     logging.info(f"Simulation for {scenario=} finished.")
