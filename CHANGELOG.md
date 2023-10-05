@@ -6,6 +6,13 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.15.0] - 2023-10-05
+### Added
+- error exception if oemof simulation is infeasible
+
+### Fixed
+- oemof.tabular version
+
 ## [0.14.0] - 2023-08-24
 ### Changed
 - update solph version to 0.0.5
