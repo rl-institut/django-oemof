@@ -4,6 +4,7 @@ import logging
 
 from celery.result import AsyncResult
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from rest_framework.views import APIView
 
 from django_oemof import hooks, results, simulation
@@ -31,7 +32,10 @@ class SimulateEnergysystem(APIView):
         task = AsyncResult(task_id)
         if task.ready():
             logging.info(f"Task #{task.task_id} finished.")
-            return Response({"simulation_id": task.get()})
+            simulation_id = task.get()
+            if simulation_id is None:
+                return APIException("Simulation is infeasible")
+            return Response({"simulation_id": simulation_id})
         return Response({"simulation_id": None})
 
     @staticmethod

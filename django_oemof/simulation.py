@@ -52,7 +52,11 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
-        input_data, results_data = simulate_energysystem(scenario, energysystem, lp_file)
+        termination_condition, input_data, results_data = simulate_energysystem(scenario, energysystem, lp_file)
+        if termination_condition == "infeasible":
+            logging.warning(
+                f"Simulation run for {scenario=} and {parameters=} is infeasible.")
+            return
         dataset = models.OemofDataset.store_results(input_data, results_data)
         # pylint: disable=E1101
         simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
@@ -171,13 +175,13 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
 
     Returns
     -------
-    results : tuple(dict, dict)
-        Simulation input and results
+    results : tuple(bool, dict, dict)
+        Simulation termination condition, input and results
     """
     logging.info(f"Starting simulation for {scenario=}...")
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
-    model.solve(solver="cbc", cmdline_options={"mipgap": "0.1"})
+    model_results = model.solve(solver="cbc", cmdline_options={"mipgap": "0.1"})
     if lp_file:
         model.write(lp_file, io_options={"symbolic_solver_labels": True})
     logging.info(f"Simulation for {scenario=} finished.")
@@ -188,4 +192,4 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     )
     results_data = solph.processing.results(model)
 
-    return map(solph.processing.convert_keys_to_strings, (input_data, results_data))
+    return model_results.solver.termination_condition, map(solph.processing.convert_keys_to_strings, (input_data, results_data))
