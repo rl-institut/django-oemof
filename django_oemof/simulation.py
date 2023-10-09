@@ -192,4 +192,4 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     )
     results_data = solph.processing.results(model)
 
-    return model_results.solver.termination_condition, map(solph.processing.convert_keys_to_strings, (input_data, results_data))
+    return model_results.solver.termination_condition, *map(solph.processing.convert_keys_to_strings, (input_data, results_data))
