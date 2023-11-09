@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.16.0] - 2023-11-09
+### Changed
+- Updated oemof.tabular version to v0.0.4
+
 ## [0.15.1] - 2023-10-09
 ### Fixed
 - simulation unpack of mapped results
