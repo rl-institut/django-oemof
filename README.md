@@ -27,6 +27,12 @@ Django project must use celery and automatically detect celery tasks.
 
 3. Run ``python manage.py migrate`` to create the oemof models.
 
+## Configuration
+
+You can set following configs via environment:
+
+- DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS
+  list of parameter keys which shall be ignored when initializing a simulation 
 
 ## OEMOF Datapackages
 

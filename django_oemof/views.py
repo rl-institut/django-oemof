@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 from rest_framework.views import APIView
 
-from django_oemof import hooks, results, simulation
+from django_oemof import hooks, results, settings, simulation
 
 
 class SimulateEnergysystem(APIView):
@@ -56,6 +56,10 @@ class SimulateEnergysystem(APIView):
         scenario = request.POST["scenario"]
         parameters_raw = request.POST.get("parameters")
         parameters = json.loads(parameters_raw) if parameters_raw else {}
+        # Ignore user-defined parameters, can be defined via settings:
+        for parameter in settings.DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS:
+            parameters.pop(parameter)
+
         parameters = hooks.apply_hooks(
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
         )

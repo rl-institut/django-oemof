@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.17.0] - 2024-02-27
+### Added
+- config option DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS to ignore parameters when running simulation
+
 ## [0.16.0] - 2023-11-09
 ### Changed
 - Updated oemof.tabular version to v0.0.4
