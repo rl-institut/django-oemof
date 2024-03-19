@@ -9,7 +9,7 @@ CBC solver has to be installed. Install it via (conda):
 conda install -c conda-forge coincbc
 ```
 
-Django project must use celery and automatically detect celery tasks.
+Django project must use celery and automatically detect celery tasks. (follow https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html to setup celery)
 
 ## Quick start
 
