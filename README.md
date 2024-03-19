@@ -17,13 +17,13 @@ Django project must use celery and automatically detect celery tasks.
     ```
         INSTALLED_APPS = [
             ...
-            'oemof',
+            'django_oemof',
         ]
     ```
 
 2. Include the oemof URLconf in your project urls.py like this::
 
-    path('oemof/', include('oemof.urls')),
+    path('oemof/', include('django_oemof.urls')),
 
 3. Run ``python manage.py migrate`` to create the oemof models.
 
