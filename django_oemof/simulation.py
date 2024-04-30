@@ -59,9 +59,15 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
             return
         dataset = models.OemofDataset.store_results(input_data, results_data)
         # pylint: disable=E1101
-        simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
-        simulation.save()
-        logging.info(f"Stored simulation results for {scenario=} and {parameters=}.")
+        try:
+            # Add additional check in case simulation with same parameters has been run in parallel
+            simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
+            logging.info(
+                f"Simulation results for {scenario=} and {parameters=} are stored already by other simulation run.")
+        except models.Simulation.DoesNotExist:
+            simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
+            simulation.save()
+            logging.info(f"Stored simulation results for {scenario=} and {parameters=}.")
     return simulation.id
 
 

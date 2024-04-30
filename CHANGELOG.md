@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [Unreleased]
+### Added
+- check for stored simulation to prevent doubling simulation results
+
 ## [0.17.0] - 2024-02-27
 ### Added
 - config option DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS to ignore parameters when running simulation
