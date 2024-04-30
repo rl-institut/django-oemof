@@ -6,9 +6,12 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
-## [Unreleased]
+## [0.18.0] - 2024-04-30
 ### Added
 - check for stored simulation to prevent doubling simulation results
+
+### Changed
+- removed `oemof.tabular` from dependencies (BREAKING) 
 
 ## [0.17.0] - 2024-02-27
 ### Added

@@ -4,7 +4,8 @@ Django-Oemof is a Django app to provide an API to build and optimize oemof.solph
 
 ## Requirements
 
-CBC solver has to be installed. Install it via (conda):
+- `oemof.tabular` has to be installed 
+- CBC solver has to be installed. Install it via (conda):
 ```
 conda install -c conda-forge coincbc
 ```
