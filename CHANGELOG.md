@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [Unreleased]
+### Fixed
+- error responses for invalid simulation runs
+
 ## [0.18.0] - 2024-04-30
 ### Added
 - check for stored simulation to prevent doubling simulation results

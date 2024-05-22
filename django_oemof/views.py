@@ -3,8 +3,8 @@ import json
 import logging
 
 from celery.result import AsyncResult
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException
 from rest_framework.views import APIView
 
 from django_oemof import hooks, results, settings, simulation
@@ -32,9 +32,12 @@ class SimulateEnergysystem(APIView):
         task = AsyncResult(task_id)
         if task.ready():
             logging.info(f"Task #{task.task_id} finished.")
-            simulation_id = task.get()
+            try:
+                simulation_id = task.get()
+            except:  # noqa: E722
+                return Response({"msg": "Simulation error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             if simulation_id is None:
-                return APIException("Simulation is infeasible")
+                return Response({"msg": "Simulation is infeasible"}, status=status.HTTP_400_BAD_REQUEST)
             return Response({"simulation_id": simulation_id})
         return Response({"simulation_id": None})
 
