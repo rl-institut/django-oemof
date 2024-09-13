@@ -2,6 +2,7 @@
 import json
 import logging
 
+from celery import current_app
 from celery.result import AsyncResult
 from rest_framework import status
 from rest_framework.response import Response
@@ -66,7 +67,7 @@ class SimulateEnergysystem(APIView):
         parameters = hooks.apply_hooks(
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
         )
-        task = simulation.simulate_scenario.delay(scenario, parameters)
+        task = current_app.tasks["django_oemof.simulation.simulate_scenario"].delay(scenario, parameters)
         logging.info(f"Started simulation task #{task.task_id}.")
         return Response({"task_id": task.task_id})
 
