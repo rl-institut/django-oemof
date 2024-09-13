@@ -15,4 +15,5 @@ urlpatterns = [
     path("simulate", views.SimulateEnergysystem.as_view(), name="simulate"),
     path("terminate", views.TerminateSimulationView.as_view()),
     path("calculate", views.CalculateResults.as_view()),
+    path("delete", views.DeleteSimulationView.as_view(), name="delete"),
 ]

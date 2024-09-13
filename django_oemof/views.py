@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import hooks, results, settings, simulation
+from django_oemof import hooks, results, settings, simulation, models
 
 
 class SimulateEnergysystem(APIView):
@@ -118,3 +118,22 @@ class CalculateResults(APIView):
         calculations = request.GET.getlist("calculations")
         calculated_results = results.get_results(simulation_id, calculations)
         return Response(calculated_results)
+
+
+class DeleteSimulationView(APIView):
+    """View to delete an existing Oemof simulation"""
+
+    @staticmethod
+    def post(request):
+        simulation_id = request.POST.get("simulation_id", None)
+        if simulation_id is not None:
+
+            models.Simulation.objects.filter(id=simulation_id).delete()
+            logging.info(f"Deleted simulation with id {simulation_id}")
+
+        scenario = request.POST.get("scenario", None)
+        if scenario is not None:
+            models.Simulation.objects.filter(scenario=scenario).delete()
+            logging.info(f"Deleted simulations linked with scenario {scenario}")
+
+        return Response()
