@@ -18,6 +18,7 @@ Django project must use celery and automatically detect celery tasks. (follow ht
     ```
         INSTALLED_APPS = [
             ...
+            'rest_framework'
             'django_oemof',
         ]
     ```
