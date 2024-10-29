@@ -22,7 +22,7 @@ class SimulateEnergysystem(APIView):
         Parameters
         ----------
         request
-            Holding celery task ID
+            Holding celery task ID 'task_id'
 
         Returns
         -------
@@ -50,12 +50,12 @@ class SimulateEnergysystem(APIView):
         Parameters
         ----------
         request
-            Request holding scenario and parameters as JSON
+            Request holding 'scenario' and 'parameters' as JSON
 
         Returns
         -------
         Response
-            holding celery task ID
+            holding celery task ID 'task_id'
         """
         scenario = request.POST["scenario"]
         parameters_raw = request.POST.get("parameters")
@@ -83,7 +83,7 @@ class TerminateSimulationView(APIView):
         Parameters
         ----------
         request
-            Holding celery task ID
+            request holding celery task ID 'task_id'
 
         Returns
         -------
@@ -108,7 +108,7 @@ class CalculateResults(APIView):
         Parameters
         ----------
         request
-            Request
+            Request holding 'simulation_id' and a list of calculations under 'calculations'
 
         Returns
         -------

@@ -4,7 +4,7 @@ Django-Oemof is a Django app to provide an API to build and optimize oemof.solph
 
 ## Requirements
 
-- `oemof.tabular` has to be installed 
+- `oemof.tabular` has to be installed
 - CBC solver has to be installed. Install it via (conda):
 ```
 conda install -c conda-forge coincbc
@@ -33,7 +33,7 @@ Django project must use celery and automatically detect celery tasks. (follow ht
 You can set following configs via environment:
 
 - DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS
-  list of parameter keys which shall be ignored when initializing a simulation 
+  list of parameter keys which shall be ignored when initializing a simulation
 
 ## OEMOF Datapackages
 
@@ -45,7 +45,7 @@ Name of datapackage folder is used in request for building ES.
 Hooks can be used to change default behaviour of parameter setup, energysystem build and model solving.
 This is done by defining custom functions which can be registered in django_oemof and are applied when simulating an ES.
 Depending on hook type (Parameter/Energysystem/Model), the defined custom functions are applied to parameters, build Es or after creating the model.
-Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario to aplly hook to all scenarios.
+Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario to apply hook to all scenarios.
 An example hook (changing default behaviour of parameter setup) could be set up as follows:
 
 ```python
@@ -62,6 +62,64 @@ demand_kW_hook = hooks.Hook(scenario="dispatch", function=converting_demand_to_k
 hooks.register_hook(hooks.HookType.PARAMETER, demand_kW_hook)
 
 ```
+
+## API endpoints
+
+Start a simulation with a post request on "/simulate"
+
+```
+import requests
+import json
+
+HOST = "http://127.0.0.1:8000"
+SIMULATE_URL = f"{HOST}/oemof/simulate"
+
+payload = {
+    "scenario": "<name of a scenario datapackage within data/oemof folder>",
+    "parameters": json.dumps({"some": "paremeters"}),
+}
+
+with requests.session() as client:
+    req = client.post(
+        SIMULATE_URL,
+        data=payload,
+    )
+    answer = json.loads(req.text)
+    print(f"http://127.0.0.1:8000/oemof/simulate?task_id={answer['task_id']}")
+```
+
+You can terminate this simulation with its task_id
+
+```
+TERMINATE_URL = f"{HOST}/oemof/terminate"
+
+payload = {
+    "task_id": "<task id you got form the simulation>",
+}
+
+with requests.session() as client:
+    req = client.post(
+        TERMINATE_URL,
+        data=payload,
+    )
+```
+
+You can also delete a simulation results provided the simulation id
+
+```
+DELETE_URL = f"{HOST}/oemof/delete"
+
+payload = {
+    "simulation_id": "<simulation id>",
+}
+
+with requests.session() as client:
+    req = client.post(
+        DELETE_URL,
+        data=payload,
+    )
+```
+
 
 ## Tests
 
