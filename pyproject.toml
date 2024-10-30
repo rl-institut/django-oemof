@@ -13,6 +13,8 @@ django-environ = "^0.10.0"  # https://github.com/joke2k/django-environ
 boto3 = "1.26.137" # Fixed as it is unused and causes long updating time in poetry/pip
 djangorestframework = "^3.14.0"
 celery = "^5.1.2"
+pandas = ">2.0"
+numpy = "<2.0"
 
 
 [tool.poetry.group.dev.dependencies]
