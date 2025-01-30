@@ -71,3 +71,25 @@ hooks.register_hook(hooks.HookType.PARAMETER, demand_kW_hook)
 ## Tests
 
 Run tests for standalone app via `python runtests.py`
+
+## Standalone
+
+This section is about using django-oemof without necessity to set up a django webserver.
+You can store/restore simulated oemof.tabular datapackages using djangos ORM.
+Additionally, hooks from django-oemof to 
+- change parameters before simulation,
+- change ES after building from datapackage or 
+- changing model before simulating 
+
+are available.
+
+### Usage
+
+Steps to run simulation:
+1. Set up database and set correct credentials in setup.py
+2. Migrate django models via `python manage.py migrate`
+3. Download or create a valid oemof.tabular datapackage and store it in folder `media/oemof`
+4. Adapt scenario (datapackage) name and parameters in `setup.py`
+5. Run simulation via `python simulate.py`
+6. Access stored simulation results for further processing via `python postprocessing.py`
+
