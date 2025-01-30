@@ -1,3 +1,5 @@
+from django_oemof.tests.test_oemof_parameters import OEMOF_DATAPACKAGE
+
 # Django-Oemof
 
 Django-Oemof is a Django app to provide an API to build and optimize oemof.solph models and deliver results via JSON response.
@@ -86,10 +88,38 @@ are available.
 ### Usage
 
 Steps to run simulation:
-1. Set up database and set correct credentials in setup.py
-2. Migrate django models via `python manage.py migrate`
+1. Set up database url as `DATABASE_URL` in `.env` file in working directory
+2. Migrate django models via `python -m django_oemof.standalone migrate`
 3. Download or create a valid oemof.tabular datapackage and store it in folder `media/oemof`
-4. Adapt scenario (datapackage) name and parameters in `setup.py`
-5. Run simulation via `python simulate.py`
-6. Access stored simulation results for further processing via `python postprocessing.py`
+   (Media folder can be changed via `MEDIA_ROOT` in `.env` file)
+4. Create script which imports `init_django` from `django_oemof.standalone` 
+5. Now, you can save/restore oemof results to/from DB using:
+```python
+# Example with some hooks
+from django_oemof import simulation, hooks
+
+OEMOF_DATAPACKAGE = "dispatch"
+
+# Hook functions must be defined beforehand
+ph = hooks.Hook(OEMOF_DATAPACKAGE, test_parameter_hook)
+esh = hooks.Hook(OEMOF_DATAPACKAGE, test_es_hook)
+mh = hooks.Hook(OEMOF_DATAPACKAGE, test_model_hook)
+
+hooks.register_hook(hook_type=hooks.HookType.PARAMETER, hook=ph)
+hooks.register_hook(hook_type=hooks.HookType.ENERGYSYSTEM, hook=esh)
+hooks.register_hook(hook_type=hooks.HookType.MODEL, hook=mh)
+
+parameters = {}
+simulation_id = simulation.simulate_scenario(scenario=OEMOF_DATAPACKAGE, parameters=parameters)
+print("Simulation ID:", simulation_id)
+
+# Restore oemof results from DB
+from django_oemof import models
+sim = models.Simulation.objects.get(id=1)
+inputs, outputs = sim.dataset.restore_results()
+```
+   
+*Note*: `django_oemof.models` must be loaded *AFTER* `init_django()` call. 
+Thus, import of `django.models` might look unusual and linter might complain - 
+but otherwise django models are not ready yet and a django error will occur! 
 
