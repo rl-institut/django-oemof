@@ -29,7 +29,9 @@ Django project must use celery and automatically detect celery tasks. (follow ht
 
     path('oemof/', include('django_oemof.urls')),
 
-3. Run ``python manage.py migrate`` to create the oemof models.
+3. Run `python manage.py migrate` to create the oemof models.
+4. Now you can call `/oemof/simulate?scenario=<oemof_datapackage>` in the browser in order to start simulation of an Oemof datapackage. 
+   See section [OEMOF Datapackages](#oemof-datapackages) on how to prepare datapackages.
 
 ## Configuration
 
@@ -40,34 +42,60 @@ You can set following configs via environment:
 
 ## OEMOF Datapackages
 
-Have to be put in folder `oemof` within djangos `MEDIA_ROOT` folder.
+Have to be put in folder `oemof` within Django's `MEDIA_ROOT` folder.
 Name of datapackage folder is used in request for building ES.
+Once simulation of a scenario is started, the related datapackage will be build using `oemof.tabular`'s [Energysystem.from_datapackage()](https://github.com/oemof/oemof-tabular/blob/09346649f75389d9fdafa62c24ae5e95cc0cf291/src/oemof/tabular/datapackage/__init__.py#L7C1-L7C71).
+Afterwards, components and constraints of resulting `oemof.solph.Energysystem` and `oemof.solph.Model` can be adapted/added/deleted using so-called [hooks](#hooks).
 
 ## Hooks
 
-Hooks can be used to change default behaviour of parameter setup, energysystem build and model solving.
-This is done by defining custom functions which can be registered in django_oemof and are applied when simulating an ES.
-Depending on hook type (Parameter/Energysystem/Model), the defined custom functions are applied to parameters, build Es or after creating the model.
+Hooks can be used to adapt energysystem and model of the oemof simulation.
+This is done by defining custom functions which can be registered in django_oemof and are applied at certain stages while building the ES and optimizing the resulting model.
 See following flow chart for order of hooks:
 
 ![Hook Flow Chart](./docs/images/oemof_flow.png)
 
-Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario to aplly hook to all scenarios.
-An example hook (changing default behaviour of parameter setup) could be set up as follows:
+Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario key to apply the hook to all scenarios.
+
+The different hooks are explained in the following:
+
+1. **Setup Hook**
+   
+   Gets executed before simulation is started. After all related setup hooks have been run, the resulting parameter set will be used to start/lookup simulation. 
+   Thus, the setup hook can modify the parameters which will be stored together with simulation results in the database. As these parameters must be JSON-able, no complex parameters (like pandas.DataFrame) can be used here.
+   Normally the setup hook is used to handle request data, especially to clean user input using forms.
+
+2. **Parameter Hook**
+   
+   This hook gets executed right after building ES from datapackage. As a special hook, the resulting parameters dictionary is used to adapt component attributes within the ES. 
+   The first key is used to identify ES component, the value, which consists of another dictionary, is used to adapt attributes of the related component 
+   (i.e. regarding the dispatch example in `oemof.tabular`, the dictionary `{"demand1": {"amount": 2000}}` would increase load to value 2000 (instead of 1000)).
+   Profiles can also be adapted by this hook. In order to do so, a profile given as `pandas.Series` must be set as value instead (i.e. `{"demand0": {"profile": pandas.Series(...)}}`).
+
+3. **Energysystem Hook**
+
+   This hook gets executed after adapting ES from parameter hooks. The underlying function gets access to the `oemof.solph.Energysystem` and can adapt, add or delete components directly within the ES.
+
+4. **Model Hook**
+
+   This hook gets executed after building the optimization model from ES. By this hook, constraints of the model can be adapted, added or deleted.
+
+An example hook (from [digiplan](https://github.com/rl-institut-private/digiplan/blob/0b40cc944a94c8ad73ce95b4d0cc2fd092d91433/digiplan/map/hooks.py#L48), adapting electricity demand) could be set up as follows:
 
 ```python
-
 from django_oemof import hooks
 
 
-def converting_demand_to_kW(data):
-   data["demand"] = data["demand"] * 1000
-   return data
+def adapt_electricity_demand(scenario: str, data: dict, request: HttpRequest) -> dict:  # noqa: ARG001
+    for sector, slider in (("hh", "s_v_3"), ("cts", "s_v_4"), ("ind", "s_v_5")):
+        demand = datapackage.get_power_demand(sector)[sector]
+        logging.info(f"Adapting electricity demand at {sector=}.")
+        data[f"ABW-electricity-demand_{sector}"] = {"amount": float(demand["2022"].sum()) * data.pop(slider) / 100}
+    return data
 
 
-demand_kW_hook = hooks.Hook(scenario="dispatch", function=converting_demand_to_kW)
-hooks.register_hook(hooks.HookType.PARAMETER, demand_kW_hook)
-
+electricity_demand_hook = hooks.Hook(scenario="dispatch", function=adapt_electricity_demand)
+hooks.register_hook(hooks.HookType.PARAMETER, electricity_demand_hook)
 ```
 
 ## Tests
