@@ -116,14 +116,18 @@ are available.
 ### Usage
 
 Steps to run simulation:
-1. Set up database url as `DATABASE_URL` in `.env` file in working directory
-2. Migrate django models via `python -m django_oemof.standalone migrate`
-3. Download or create a valid oemof.tabular datapackage and store it in folder `media/oemof`
+1. Install this package via `pip install django-oemof` or locally via `pip install .`
+2. Additionally, `django` and `oemof.tabular` (chose your version freely) must be installed manually
+3. Set up database url as `DATABASE_URL` in `.env` file in working directory
+4. Migrate django models via `python -m django_oemof.standalone migrate`
+5. Download or create a valid oemof.tabular datapackage and store it in folder `media/oemof`
    (Media folder can be changed via `MEDIA_ROOT` in `.env` file)
-4. Create script which imports `init_django` from `django_oemof.standalone` 
-5. Now, you can save/restore oemof results to/from DB using:
+6. Create script which imports `init_django` from `django_oemof.standalone` 
+7. Now, you can save/restore oemof results to/from DB using:
 ```python
 # Example with some hooks
+from django_oemof.standalone import init_django
+init_django()
 from django_oemof import simulation, hooks
 
 OEMOF_DATAPACKAGE = "dispatch"
@@ -143,7 +147,7 @@ print("Simulation ID:", simulation_id)
 
 # Restore oemof results from DB
 from django_oemof import models
-sim = models.Simulation.objects.get(id=1)
+sim = models.Simulation.objects.get(id=simulation_id)
 inputs, outputs = sim.dataset.restore_results()
 ```
    
