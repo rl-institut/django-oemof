@@ -39,6 +39,8 @@ You can set following configs via environment:
 
 - DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS
   list of parameter keys which shall be ignored when initializing a simulation 
+- DJANGO_OEMOF_TIMELIMIT
+  timelimit for cbc solver, default is 600s = 10min
 
 ## OEMOF Datapackages
 

@@ -7,6 +7,7 @@ from collections import namedtuple
 import oemof.tabular.datapackage  # noqa
 from celery import shared_task
 from django.conf import settings
+from . import settings as do_settings
 from oemof import solph
 from oemof.tabular.facades import TYPEMAP
 
@@ -149,7 +150,7 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     logging.info(f"Starting simulation for {scenario=}...")
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
-    model_results = model.solve(solver="cbc", cmdline_options={"mipgap": "0.1"})
+    model_results = model.solve(solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT})
     if lp_file:
         model.write(lp_file, io_options={"symbolic_solver_labels": True})
     logging.info(f"Simulation for {scenario=} finished.")
