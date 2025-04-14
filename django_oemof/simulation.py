@@ -106,63 +106,25 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     -------
     energysystem: Energysystem with changed parameters
     """
-
-    def auto_adapt_flow():
-        """Set flow attributes in case of input/output attributes of parent component"""
-        if "input" in attribute:
-            if len(energysystem.groups[group].inputs) > 1:
-                logging.warning(
-                    f"Cannot adapt input parameters for {group=} automatically (more than one input). You must set it manually, using 'flow' group."
-                )
-                return
-            from_node = list(energysystem.groups[group].inputs.keys())[0].label
-            to_node = group
-        else:
-            if len(energysystem.groups[group].outputs) > 1:
-                logging.warning(
-                    f"Cannot adapt output parameters for {group=} automatically (more than one output). You must set it manually, using 'flow' group."
-                )
-                return
-            from_node = group
-            to_node = list(energysystem.groups[group].outputs.keys())[0].label
-        for attr, val in value.items():
-            adapt_flow(FlowAttribute(from_node, to_node, attr, val))
-
-    def adapt_flow(flow: FlowAttribute):
-        flow_tuple = next(
-            g
-            for g in energysystem.groups[oemof.solph.flows._simple_flow_block.SimpleFlowBlock]
-            if g[0].label == flow.from_node and g[1].label == flow.to_node
-        )
-        if not hasattr(flow_tuple[2], flow.attribute):
-            logging.warning(
-                f"Attribute '{flow.attribute}' not found in flow of component '{group}' in energysystem. "
-                "Adapting the attribute might have no effect."
-            )
-        logging.info(f"Setting flow attribute '{flow.attribute}' from '{flow.from_node}' to '{flow.to_node}'")
-        setattr(flow_tuple[2], flow.attribute, flow.value)
-
     parameters = parameters or {}
 
-    for group, attributes in parameters.items():
-        if group == "flow":
-            for flow_attribute in attributes:
-                adapt_flow(flow_attribute)
+    for node_name, attributes in parameters.items():
+        if node_name == "flow":
+            logging.warning(f"This is deprecated. Flows are adapted using input_parameters and output_parameters instead.")
             continue
-        if group not in energysystem.groups:
-            logging.warning(f"Cannot adapt component '{group}', as it cannot be found in energysystem.")
+        if node_name not in [n.label for n in energysystem.nodes]:
+            logging.warning(f"Cannot adapt component '{node_name}', as it cannot be found in energysystem.")
             continue
+
+        node = next(n for n in energysystem.nodes if node_name == n.label)
         for attribute, value in attributes.items():
-            if not hasattr(energysystem.groups[group], attribute):
+            if not hasattr(node, attribute):
                 logging.warning(
-                    f"Attribute '{attribute}' not found in component '{group}' in energysystem. "
+                    f"Attribute '{attribute}' not found in component '{node_name}' in energysystem. "
                     "Adapting the attribute might have no effect."
                 )
-            if attribute in ("input_parameters", "output_parameters"):
-                auto_adapt_flow()
-            setattr(energysystem.groups[group], attribute, value)
-        energysystem.groups[group].update()
-
+            setattr(node, attribute, value)
+        node.update()
     return energysystem
 
 
