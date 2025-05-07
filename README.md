@@ -100,6 +100,15 @@ electricity_demand_hook = hooks.Hook(scenario="dispatch", function=adapt_electri
 hooks.register_hook(hooks.HookType.PARAMETER, electricity_demand_hook)
 ```
 
+## Visualization
+
+You can get a sankey from result flows by visiting `/oemof/flows?simulation_id=<simuulation_id>`.
+
+**Note:** Unfortunately, all storage components are removed (currently hardcoded), as eChart sankeys do not allow cyclic flows.
+
+This will give you a sankey like this:
+![Sankey made from oemof results](./docs/images/sankey.png)
+
 ## Tests
 
 Run tests for standalone app via `python runtests.py`

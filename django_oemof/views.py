@@ -7,7 +7,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_oemof import hooks, results, settings, simulation
+from django.views.generic import TemplateView
+
+from django_oemof import hooks, results, settings, simulation, models
 
 
 class SimulateEnergysystem(APIView):
@@ -117,3 +119,30 @@ class CalculateResults(APIView):
         calculations = request.GET.getlist("calculations")
         calculated_results = results.get_results(simulation_id, calculations)
         return Response(calculated_results)
+
+
+class FlowsView(TemplateView):
+    template_name = "django_oemof/flows.html"
+
+    def get_context_data(self, **kwargs):
+        simulation_id = self.request.GET["simulation_id"]
+        try:
+            sim = models.Simulation.objects.get(pk=simulation_id)  # pylint: disable=E1101
+        except models.Simulation.DoesNotExist:  # pylint: disable=E1101
+            # pylint: disable=W0707
+            raise simulation.SimulationError(f"Simulation with ID#{simulation_id} not present in database.")
+
+        _, results = sim.dataset.restore_results()
+        links = [{"source": source, "target": target, "value": data["sequences"]["flow"].sum()} for (source, target), data in results.items() if "flow" in data["sequences"]]
+        # Filter storages in order to avoid cycles (not possible with eCharts Sankeys)
+        links = [link for link in links if "storage" not in link["source"] and "storage" not in link["target"]]
+        names_raw = {link["source"] for link in links} | {link["target"] for link in links}
+        names = [{"name": name} for name in names_raw]
+        return {
+            "results": results,
+            "simulation_id": simulation_id,
+            "chart_data": {
+                "names": names,
+                "links": links,
+            },
+        }
