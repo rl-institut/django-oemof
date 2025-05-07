@@ -9,7 +9,7 @@ packages = [{include = "django_oemof"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-django-environ = "^0.10.0"  # https://github.com/joke2k/django-environ
+django-environ = ">0.10.0"  # https://github.com/joke2k/django-environ
 djangorestframework = "^3.14.0"
 celery = "^5.1.2"
 pandas = ">2.0"
