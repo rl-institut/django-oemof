@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.21.0] - 2025-05-07
+### Added
+- sankey visualization of flows for oemof simulation results 
+
 ## [0.20.1] - 2025-05-07
 ### Changed
 - relaxed version of django-environ 
