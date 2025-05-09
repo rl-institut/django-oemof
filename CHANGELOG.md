@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.21.1] - 2025-05-09
+### Changed
+- remove links and nodes in flow sankey for zero values
+
 ## [0.21.0] - 2025-05-07
 ### Added
 - sankey visualization of flows for oemof simulation results 
