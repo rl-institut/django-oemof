@@ -6,6 +6,13 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [0.21.2] - 2025-05-21
+### Changed
+- show storage output flows in flow chart
+
+### Added
+- logging for ES build parameters
+
 ## [0.21.1] - 2025-05-09
 ### Changed
 - remove links and nodes in flow sankey for zero values
