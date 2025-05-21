@@ -108,6 +108,7 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     energysystem: Energysystem with changed parameters
     """
     parameters = parameters or {}
+    logging.info(f"Adapting parameters in ES using {parameters=}.")
 
     for node_name, attributes in parameters.items():
         if node_name == "flow":
@@ -147,9 +148,10 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     results : tuple(bool, dict, dict)
         Simulation termination condition, input and results
     """
-    logging.info(f"Starting simulation for {scenario=}...")
+    logging.info(f"Building model for {scenario=}.")
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
+    logging.info(f"Starting simulation for {scenario=}.")
     model_results = model.solve(solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT})
     if lp_file:
         model.write(lp_file, io_options={"symbolic_solver_labels": True})
