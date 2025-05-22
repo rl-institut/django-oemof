@@ -82,13 +82,17 @@ The different hooks are explained in the following:
 
    This hook gets executed after building the optimization model from ES. By this hook, constraints of the model can be adapted, added or deleted.
 
+5. **Postprocessing Hook**
+
+   This hook gets executed after model is solved and is intended to change meta results or add additional meta results from model. Hook is parametrized with meta_results as data and model as additional_data.
+
 An example hook (from [digiplan](https://github.com/rl-institut-private/digiplan/blob/0b40cc944a94c8ad73ce95b4d0cc2fd092d91433/digiplan/map/hooks.py#L48), adapting electricity demand) could be set up as follows:
 
 ```python
 from django_oemof import hooks
 
 
-def adapt_electricity_demand(scenario: str, data: dict, request: HttpRequest) -> dict:  # noqa: ARG001
+def adapt_electricity_demand(scenario: str, data: dict, additional_data: Any) -> dict:  # noqa: ARG001
     for sector, slider in (("hh", "s_v_3"), ("cts", "s_v_4"), ("ind", "s_v_5")):
         demand = datapackage.get_power_demand(sector)[sector]
         logging.info(f"Adapting electricity demand at {sector=}.")
