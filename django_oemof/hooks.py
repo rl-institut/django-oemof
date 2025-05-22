@@ -28,6 +28,7 @@ class HookType(IntEnum):
     PARAMETER = 1
     ENERGYSYSTEM = 2
     MODEL = 3
+    POSTPROCESSING = 4
 
 
 @dataclass
@@ -46,12 +47,12 @@ def register_hook(hook_type: HookType, hook: Hook):
     settings.HOOKS[hook_type].append(hook)
 
 
-def apply_hooks(hook_type: HookType, scenario: str, data: Any, request: Optional[http.HttpRequest] = None) -> dict:
+def apply_hooks(hook_type: HookType, scenario: str, data: Any, additional_data: Any = None) -> dict:
     """Applies hooks for given hook type and scenario"""
     hooked_data = deepcopy(data) if hook_type in (HookType.SETUP, HookType.PARAMETER) else data
     for hook in settings.HOOKS[hook_type]:
         if hook.scenario != scenario and hook.scenario is not ALL_SCENARIOS:
             continue
         logging.info(f"Applying {hook}")
-        hooked_data = hook.function(scenario, hooked_data, request)
+        hooked_data = hook.function(scenario, hooked_data, additional_data)
     return hooked_data

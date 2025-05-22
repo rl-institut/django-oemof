@@ -1,4 +1,6 @@
 """Simulation module"""
+
+import json
 import logging
 from typing import Optional
 from collections import namedtuple
@@ -53,12 +55,12 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
-        termination_condition, input_data, results_data = simulate_energysystem(scenario, energysystem, lp_file)
+        termination_condition, input_data, results_data, meta_results = simulate_energysystem(scenario, energysystem, lp_file)
         if termination_condition == "infeasible":
             logging.warning(
                 f"Simulation run for {scenario=} and {parameters=} is infeasible.")
             return
-        dataset = models.OemofDataset.store_results(input_data, results_data)
+        dataset = models.OemofDataset.store_results(input_data, results_data, meta_results)
         # pylint: disable=E1101
         try:
             # Add additional check in case simulation with same parameters has been run in parallel
@@ -145,8 +147,8 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
 
     Returns
     -------
-    results : tuple(bool, dict, dict)
-        Simulation termination condition, input and results
+    results : tuple(bool, dict, dict, dict, dict)
+        Simulation termination condition, input, results, meta results and custom results
     """
     logging.info(f"Building model for {scenario=}.")
     model = solph.Model(energysystem)
@@ -162,5 +164,8 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
         exclude_attrs=["bus", "from_bus", "to_bus", "from_node", "to_node"],
     )
     results_data = solph.processing.results(model)
+    # Clean-up meta results by dumping and loading and neglecting non-serializable key/values
+    meta_results = json.loads(json.dumps(solph.processing.meta_results(model), skipkeys=True, default=lambda x: "Not serializable"))
+    meta_results = hooks.apply_hooks(hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=meta_results, additional_data=model)
 
-    return model_results.solver.termination_condition, *map(solph.processing.convert_keys_to_strings, (input_data, results_data))
+    return model_results.solver.termination_condition, *map(solph.processing.convert_keys_to_strings, (input_data, results_data)), meta_results

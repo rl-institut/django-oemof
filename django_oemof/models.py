@@ -20,10 +20,11 @@ class OemofDataset(models.Model):
 
     input = models.ForeignKey("OemofData", on_delete=models.CASCADE, related_name="data_input")  # noqa: A003
     result = models.ForeignKey("OemofData", on_delete=models.CASCADE, related_name="data_result")
+    meta_results = models.JSONField()
 
     # pylint: disable=R0914
     @classmethod
-    def store_results(cls, input_data, result_data):
+    def store_results(cls, input_data, result_data, meta_results):
         """
         Stores inputs and results from oemof into DB
 
@@ -36,11 +37,13 @@ class OemofDataset(models.Model):
         Parameters
         ----------
         input_data: dict
-            Output of oemof.outputlib.processing.param_results with nodes as str
-            (use oemof.outputlib.processing.convert_keys_to_str if necessary)
+            Output of oemof.solph.processing.param_results with nodes as str
+            (use oemof.solph.processing.convert_keys_to_str if necessary)
         result_data: dict
-            Output of oemof.outputlib.processing.param_results with nodes as str
-            (use oemof.outputlib.processing.convert_keys_to_str if necessary)
+            Output of oemof.solph.processing.param_results with nodes as str
+            (use oemof.solph.processing.convert_keys_to_str if necessary)
+        meta_results: dict
+            Output of oemof.solph.processing.meta_results and additonal data from custom postprocessing hooks
 
         Returns
         -------
@@ -51,6 +54,7 @@ class OemofDataset(models.Model):
         if not isinstance(next(iter(result_data)), str):
             result_data = convert_keys_to_strings(result_data)
         oemof_dataset = OemofDataset()
+        oemof_dataset.meta_results = meta_results
         for input_result_attr, data in (("input", input_data), ("result", result_data)):
             scalars = []
             sequences = []

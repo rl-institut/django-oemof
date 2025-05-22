@@ -6,6 +6,11 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [1.0.0] - 2025-05-22
+### Added
+- meta results (including objective value) are stored in dataset
+- postprocessing hook to add custom meta results
+
 ## [0.21.2] - 2025-05-21
 ### Changed
 - show storage output flows in flow chart

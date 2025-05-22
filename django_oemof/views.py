@@ -66,7 +66,7 @@ class SimulateEnergysystem(APIView):
             parameters.pop(parameter)
 
         parameters = hooks.apply_hooks(
-            hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, request=request
+            hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, additional_data=request
         )
         task = simulation.simulate_scenario.delay(scenario, parameters)
         logging.info(f"Started simulation task #{task.task_id}.")
