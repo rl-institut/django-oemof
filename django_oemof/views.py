@@ -126,6 +126,8 @@ class FlowsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         simulation_id = self.request.GET["simulation_id"]
+        # Additional storages with different naming can be excluded via URl parameter "storages"
+        storages = self.request.GET.getlist("storages") + ["storage", "battery"]
         try:
             sim = models.Simulation.objects.get(pk=simulation_id)  # pylint: disable=E1101
         except models.Simulation.DoesNotExist:  # pylint: disable=E1101
@@ -135,7 +137,7 @@ class FlowsView(TemplateView):
         _, results = sim.dataset.restore_results()
         links = [{"source": source, "target": target, "value": data["sequences"]["flow"].sum()} for (source, target), data in results.items() if "flow" in data["sequences"]]
         # Filter storages in order to avoid cycles (not possible with eCharts Sankeys) and zeros to avoid thin lines
-        links = [link for link in links if "storage" not in link["target"] and link["value"] > 0]
+        links = [link for link in links if all(storage not in link["target"] for storage in storages) and link["value"] > 0]
         names_raw = {link["source"] for link in links} | {link["target"] for link in links}
         names = [{"name": name} for name in names_raw]
         return {
