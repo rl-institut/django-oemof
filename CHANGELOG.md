@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [Unreleased]
+### Added
+- JS to start, stop and check simulations clientside
+
 ## [1.0.0] - 2025-05-22
 ### Added
 - meta results (including objective value) are stored in dataset

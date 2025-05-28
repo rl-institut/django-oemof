@@ -1,0 +1,9 @@
+{
+  "esversion": 8,
+  "globals": {
+    "echarts": false,
+    "console": false
+  },
+  "strict": "implied",
+  "browser": true
+}
