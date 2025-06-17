@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [Unreleased]
+### Added
+- logging message for insufficient attributes in parameters
+
 ## [1.1.0] - 2025-05-28
 ### Added
 - JS to start, stop and check simulations clientside

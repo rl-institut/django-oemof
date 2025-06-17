@@ -55,10 +55,11 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
         energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
-        termination_condition, input_data, results_data, meta_results = simulate_energysystem(scenario, energysystem, lp_file)
+        termination_condition, input_data, results_data, meta_results = simulate_energysystem(
+            scenario, energysystem, lp_file
+        )
         if termination_condition == "infeasible":
-            logging.warning(
-                f"Simulation run for {scenario=} and {parameters=} is infeasible.")
+            logging.warning(f"Simulation run for {scenario=} and {parameters=} is infeasible.")
             return
         dataset = models.OemofDataset.store_results(input_data, results_data, meta_results)
         # pylint: disable=E1101
@@ -66,7 +67,8 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
             # Add additional check in case simulation with same parameters has been run in parallel
             simulation = models.Simulation.objects.get(scenario=scenario, parameters=parameters)
             logging.info(
-                f"Simulation results for {scenario=} and {parameters=} are stored already by other simulation run.")
+                f"Simulation results for {scenario=} and {parameters=} are stored already by other simulation run."
+            )
         except models.Simulation.DoesNotExist:
             simulation = models.Simulation.objects.create(scenario=scenario, parameters=parameters, dataset=dataset)
             simulation.save()
@@ -114,10 +116,20 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
 
     for node_name, attributes in parameters.items():
         if node_name == "flow":
-            logging.warning(f"This is deprecated. Flows are adapted using input_parameters and output_parameters instead.")
+            logging.warning(
+                f"This is deprecated. Flows are adapted using input_parameters and output_parameters instead."
+            )
             continue
         if node_name not in [n.label for n in energysystem.nodes]:
-            logging.warning(f"Cannot adapt component '{node_name}', as it cannot be found in energysystem.")
+            log_msg = f"Cannot adapt component '{node_name}', as it cannot be found in energysystem."
+            logging.warning(log_msg)
+            continue
+        if not isinstance(attributes, dict):
+            log_msg = (
+                f"Cannot adapt attributes for component '{node_name}', as there is no dictionary. Skipping it." 
+                """Try something like {"wind_onshore": {"capacity": 100}} instead."""
+            )
+            logging.warning(log_msg)
             continue
 
         node = next(n for n in energysystem.nodes if node_name == n.label)
@@ -154,7 +166,9 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     model = solph.Model(energysystem)
     model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
     logging.info(f"Starting simulation for {scenario=}.")
-    model_results = model.solve(solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT})
+    model_results = model.solve(
+        solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT}
+    )
     if lp_file:
         model.write(lp_file, io_options={"symbolic_solver_labels": True})
     logging.info(f"Simulation for {scenario=} finished.")
@@ -165,7 +179,15 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     )
     results_data = solph.processing.results(model)
     # Clean-up meta results by dumping and loading and neglecting non-serializable key/values
-    meta_results = json.loads(json.dumps(solph.processing.meta_results(model), skipkeys=True, default=lambda x: "Not serializable"))
-    meta_results = hooks.apply_hooks(hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=meta_results, additional_data=model)
+    meta_results = json.loads(
+        json.dumps(solph.processing.meta_results(model), skipkeys=True, default=lambda x: "Not serializable")
+    )
+    meta_results = hooks.apply_hooks(
+        hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=meta_results, additional_data=model
+    )
 
-    return model_results.solver.termination_condition, *map(solph.processing.convert_keys_to_strings, (input_data, results_data)), meta_results
+    return (
+        model_results.solver.termination_condition,
+        *map(solph.processing.convert_keys_to_strings, (input_data, results_data)),
+        meta_results,
+    )
