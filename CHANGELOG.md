@@ -6,7 +6,7 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
-## [Unreleased]
+## [1.1.1] - 2025-06-17
 ### Added
 - logging message for insufficient attributes in parameters
 
