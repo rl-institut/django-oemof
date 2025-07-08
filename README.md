@@ -53,11 +53,11 @@ Afterwards, components and constraints of resulting `oemof.solph.Energysystem` a
 
 Hooks can be used to adapt energysystem and model of the oemof simulation.
 This is done by defining custom functions which can be registered in django_oemof and are applied at certain stages while building the ES and optimizing the resulting model.
-See following flow chart for order of hooks:
+See the following flow chart for the order of hooks:
 
 ![Hook Flow Chart](./docs/images/oemof_flow.png)
 
-Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as scenario key to apply the hook to all scenarios.
+Every hook is scenario-dependent to allow different hooks per scenario, but you can use `hooks.ALL_SCENARIO` as the scenario key to apply the hook to all scenarios.
 
 The different hooks are explained in the following:
 
@@ -70,9 +70,13 @@ The different hooks are explained in the following:
 2. **Parameter Hook**
    
    This hook gets executed right after building ES from datapackage. As a special hook, the resulting parameters dictionary is used to adapt component attributes within the ES. 
-   The first key is used to identify ES component, the value, which consists of another dictionary, is used to adapt attributes of the related component 
-   (i.e. regarding the dispatch example in `oemof.tabular`, the dictionary `{"demand1": {"amount": 2000}}` would increase load to value 2000 (instead of 1000)).
-   Profiles can also be adapted by this hook. In order to do so, a profile given as `pandas.Series` must be set as value instead (i.e. `{"demand0": {"profile": pandas.Series(...)}}`).
+   The first key is used to identify the ES component. The value, which consists of another dictionary, is used to adapt attributes of the related component 
+   (i.e. regarding the dispatch example in `oemof.tabular`, the dictionary `{"demand1": {"amount": 2000}}` would increase the load to value 2000 (instead of 1000)). 
+   This hook can also adapt profiles. To do so, a profile given as `pandas.Series` must be set as value instead (i.e. `{"demand0": {"profile": pandas.Series(...)}}`).
+
+   **Note:** Changing variable `expandable` might cause problems as `Investment` might already be initialized in oemof (this is the case for storages). 
+   To avoid this, you can try to set `"investment": None` for the related component instead or additionally (i.e. `{"battery": {"capacity": 50, "storage_capacity": 100, "investment": None}`) 
+   
 
 3. **Energysystem Hook**
 
