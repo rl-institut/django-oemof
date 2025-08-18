@@ -54,9 +54,9 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
         energysystem = build_energysystem(oemof_datapackage)
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
-        energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=energysystem)
+        energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=parameters, energysystem=energysystem)
         termination_condition, input_data, results_data, meta_results = simulate_energysystem(
-            scenario, energysystem, lp_file
+            scenario, energysystem, parameters, lp_file
         )
         if termination_condition == "infeasible":
             logging.warning(f"Simulation run for {scenario=} and {parameters=} is infeasible.")
@@ -144,7 +144,7 @@ def adapt_energysystem(energysystem: solph.EnergySystem, parameters: dict):
     return energysystem
 
 
-def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None):
+def simulate_energysystem(scenario, energysystem, user_data: Optional[dict] = None, lp_file: Optional[str] = None):
     """
     Simulates ES, stores results to DB and returns simulation ID
 
@@ -154,6 +154,8 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
         Name of current scenario (used to apply hooks)
     energysystem : EnergySystem
         Built energysystem to be solved
+    user_data: Optional[dict]
+        Optional user data to be passed to hooks
     lp_file: Optional[str]
         If set, LP file is stored under given path
 
@@ -164,7 +166,7 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
     """
     logging.info(f"Building model for {scenario=}.")
     model = solph.Model(energysystem)
-    model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=model)
+    model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=user_data, model=model)
     logging.info(f"Starting simulation for {scenario=}.")
     model_results = model.solve(
         solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT}
@@ -183,7 +185,7 @@ def simulate_energysystem(scenario, energysystem, lp_file: Optional[str] = None)
         json.dumps(solph.processing.meta_results(model), skipkeys=True, default=lambda x: "Not serializable")
     )
     meta_results = hooks.apply_hooks(
-        hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=meta_results, additional_data=model
+        hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=user_data, model=model, meta_results=meta_results
     )
 
     return (
