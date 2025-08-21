@@ -6,6 +6,10 @@ and the versioning aim to respect [Semantic Versioning](http://semver.org/spec/v
 
 Here is a template for new release sections
 
+## [Unreleased]
+### Changed
+- hooks need different parameters depending on hook type
+
 ## [1.1.1] - 2025-06-17
 ### Added
 - logging message for insufficient attributes in parameters
