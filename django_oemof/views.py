@@ -59,14 +59,8 @@ class SimulateEnergysystem(APIView):
             holding celery task ID
         """
         scenario = request.POST["scenario"]
-        parameters_raw = request.POST.get("parameters")
-        parameters = json.loads(parameters_raw) if parameters_raw else {}
-        # Ignore user-defined parameters, can be defined via settings:
-        for parameter in settings.DJANGO_OEMOF_IGNORE_SIMULATION_PARAMETERS:
-            parameters.pop(parameter)
-
         parameters = hooks.apply_hooks(
-            hook_type=hooks.HookType.SETUP, scenario=scenario, data=parameters, additional_data=request
+            hook_type=hooks.HookType.SETUP, scenario=scenario, data=request.POST.dict()
         )
         task = simulation.simulate_scenario.delay(scenario, parameters)
         logging.info(f"Started simulation task #{task.task_id}.")

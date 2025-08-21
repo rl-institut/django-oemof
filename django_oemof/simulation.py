@@ -54,7 +54,7 @@ def simulate_scenario(scenario: str, parameters: dict, lp_file: Optional[str] = 
         energysystem = build_energysystem(oemof_datapackage)
         build_parameters = hooks.apply_hooks(hook_type=hooks.HookType.PARAMETER, scenario=scenario, data=parameters)
         energysystem = adapt_energysystem(energysystem, build_parameters)
-        energysystem = hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=parameters, energysystem=energysystem)
+        hooks.apply_hooks(hook_type=hooks.HookType.ENERGYSYSTEM, scenario=scenario, data=parameters, energysystem=energysystem)
         termination_condition, input_data, results_data, meta_results = simulate_energysystem(
             scenario, energysystem, parameters, lp_file
         )
@@ -166,7 +166,7 @@ def simulate_energysystem(scenario, energysystem, user_data: Optional[dict] = No
     """
     logging.info(f"Building model for {scenario=}.")
     model = solph.Model(energysystem)
-    model = hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=user_data, model=model)
+    hooks.apply_hooks(hook_type=hooks.HookType.MODEL, scenario=scenario, data=user_data, model=model)
     logging.info(f"Starting simulation for {scenario=}.")
     model_results = model.solve(
         solver="cbc", cmdline_options={"mipgap": "0.1", "seconds": do_settings.DJANGO_OEMOF_TIMELIMIT}
@@ -185,7 +185,7 @@ def simulate_energysystem(scenario, energysystem, user_data: Optional[dict] = No
         json.dumps(solph.processing.meta_results(model), skipkeys=True, default=lambda x: "Not serializable")
     )
     meta_results = hooks.apply_hooks(
-        hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=user_data, model=model, meta_results=meta_results
+        hook_type=hooks.HookType.POSTPROCESSING, scenario=scenario, data=user_data, model=model, meta=meta_results
     )
 
     return (

@@ -20,15 +20,17 @@ class AllScenarios:
 
 ALL_SCENARIOS = AllScenarios()
 
+DEFAULT_PARAMETERS = ["scenario", "data"]
+
 
 class HookType(Enum):
     """Hook types - define where to apply hooks"""
 
-    SETUP = ("setup", ())
-    PARAMETER = ("parameter", ())
-    ENERGYSYSTEM = ("energysystem", ("energysystem", ))
-    MODEL = ("model", ("model", ))
-    POSTPROCESSING = ("postprocessing", ("model", "meta"))
+    SETUP = ("setup", [])
+    PARAMETER = ("parameter", [])
+    ENERGYSYSTEM = ("energysystem", ["energysystem"])
+    MODEL = ("model", ["model"])
+    POSTPROCESSING = ("postprocessing", ["model", "meta"])
 
     def __init__(self, label, parameters):
         self.label = label
@@ -48,20 +50,36 @@ class Hook:
 
 def register_hook(hook_type: HookType, hook: Hook):
     """Registers hook depending on hook type"""
-    # TODO: Test new hooking system with ReEnAct
     sig = signature(hook.function)
     function_parameters = sig.parameters.keys()
-    if any(parameter not in function_parameters for parameter in hook_type.parameters):
-        raise KeyError("Hook function misses parameters. Needed parameters: {}".format(function_parameters))
+    if any(parameter not in function_parameters for parameter in hook_type.parameters + DEFAULT_PARAMETERS):
+        error_msg = f"Hook function '{hook.function.__name__}' misses parameters. Needed parameters: {hook_type.parameters + DEFAULT_PARAMETERS}, given: {list(function_parameters)}"
+        raise KeyError(error_msg)
+    if list(function_parameters)[:2] != DEFAULT_PARAMETERS:
+        error_msg = f"Hook function '{hook.function.__name__}' must start with parameters {DEFAULT_PARAMETERS}, instead it starts with: {list(function_parameters)[:2]}"
+        raise KeyError(error_msg)
     settings.HOOKS[hook_type].append(hook)
 
 
 def apply_hooks(hook_type: HookType, scenario: str, data: Any, **kwargs) -> dict:
     """Applies hooks for a given hook type and scenario"""
-    hooked_data = deepcopy(data) if hook_type in (HookType.SETUP, HookType.PARAMETER) else data
+    hooked_data = deepcopy(data)
+    if hook_type == HookType.POSTPROCESSING:
+        meta = deepcopy(kwargs["meta"])
+
     for hook in settings.HOOKS[hook_type]:
         if hook.scenario != scenario and hook.scenario is not ALL_SCENARIOS:
             continue
         logging.info(f"Applying {hook}")
-        hooked_data = hook.function(scenario, hooked_data, **kwargs)
+        if hook_type == HookType.ENERGYSYSTEM:
+            hook.function(scenario, hooked_data, energysystem=kwargs["energysystem"])
+        elif hook_type == HookType.MODEL:
+            hook.function(scenario, hooked_data, model=kwargs["model"])
+        elif hook_type == HookType.POSTPROCESSING:
+            meta = hook.function(scenario, hooked_data, meta=meta, model=kwargs["model"])
+        else:
+            hooked_data = hook.function(scenario, hooked_data)
+
+    if hook_type == HookType.POSTPROCESSING:
+        return meta
     return hooked_data

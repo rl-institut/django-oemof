@@ -1,10 +1,7 @@
 
 async function startSimulation(scenario, parameters) {
   const data = new URLSearchParams(
-    {
-      scenario: scenario,
-      parameters: JSON.stringify(parameters)
-    }
+    Object.assign({scenario: scenario}, parameters)
   );
   const response = await fetch("/oemof/simulate", {
     method: "POST",
