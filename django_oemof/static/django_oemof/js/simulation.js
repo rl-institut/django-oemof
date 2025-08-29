@@ -45,7 +45,11 @@ async function checkSimulation(taskId) {
       return json.simulation_id;
     }
     return null;
+  }
+  if (response.status === 400){
+    const data = await response.json();
+    throw new Error(data.msg);
   } else {
-    throw new Error(`Simulation for task ID '${taskId}' not found: ${response.status}`);
+    throw new Error(`Error checking simulation with task ID '${taskId}'. Response status: ${response.status}`);
   }
 }

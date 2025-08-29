@@ -33,6 +33,9 @@ class SimulateEnergysystem(APIView):
         task_id = request.GET["task_id"]
         task = AsyncResult(task_id)
         if task.ready():
+            if task.failed():
+                logging.info(f"Task #{task.task_id} failed: {task.result.args[0]}")
+                return Response({"msg": f"Simulation error: {task.result.args[0]}"}, status=status.HTTP_400_BAD_REQUEST)
             logging.info(f"Task #{task.task_id} finished.")
             try:
                 simulation_id = task.get()
