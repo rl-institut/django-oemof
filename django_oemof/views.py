@@ -2,13 +2,13 @@
 import json
 import logging
 
+from celery import current_app
 from celery.result import AsyncResult
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django.views.generic import TemplateView
-
 from django_oemof import hooks, results, settings, simulation, models
 
 
@@ -23,7 +23,7 @@ class SimulateEnergysystem(APIView):
         Parameters
         ----------
         request
-            Holding celery task ID
+            Holding celery task ID 'task_id'
 
         Returns
         -------
@@ -54,18 +54,18 @@ class SimulateEnergysystem(APIView):
         Parameters
         ----------
         request
-            Request holding scenario and parameters as JSON
+            Request holding 'scenario' and 'parameters' as JSON
 
         Returns
         -------
         Response
-            holding celery task ID
+            holding celery task ID 'task_id'
         """
         scenario = request.POST["scenario"]
         parameters = hooks.apply_hooks(
             hook_type=hooks.HookType.SETUP, scenario=scenario, data=request.POST.dict()
         )
-        task = simulation.simulate_scenario.delay(scenario, parameters)
+        task = current_app.tasks["django_oemof.simulation.simulate_scenario"].delay(scenario, parameters)
         logging.info(f"Started simulation task #{task.task_id}.")
         return Response({"task_id": task.task_id})
 
@@ -81,7 +81,7 @@ class TerminateSimulationView(APIView):
         Parameters
         ----------
         request
-            Holding celery task ID
+            request holding celery task ID 'task_id'
 
         Returns
         -------
@@ -106,7 +106,7 @@ class CalculateResults(APIView):
         Parameters
         ----------
         request
-            Request
+            Request holding 'simulation_id' and a list of calculations under 'calculations'
 
         Returns
         -------
@@ -145,3 +145,22 @@ class FlowsView(TemplateView):
                 "links": links,
             },
         }
+
+
+class DeleteSimulationView(APIView):
+    """View to delete an existing Oemof simulation"""
+
+    @staticmethod
+    def post(request):
+        simulation_id = request.POST.get("simulation_id", None)
+        if simulation_id is not None:
+
+            models.Simulation.objects.filter(id=simulation_id).delete()
+            logging.info(f"Deleted simulation with id {simulation_id}")
+
+        scenario = request.POST.get("scenario", None)
+        if scenario is not None:
+            models.Simulation.objects.filter(scenario=scenario).delete()
+            logging.info(f"Deleted simulations linked with scenario {scenario}")
+
+        return Response()

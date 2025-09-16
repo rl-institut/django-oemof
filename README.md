@@ -6,7 +6,7 @@ Django-Oemof is a Django app to provide an API to build and optimize oemof.solph
 
 ## Requirements
 
-- `oemof.tabular` has to be installed 
+- `oemof.tabular` has to be installed
 - CBC solver has to be installed. Install it via (conda):
 ```
 conda install -c conda-forge coincbc
@@ -92,6 +92,7 @@ The different hooks are explained in the following:
 
 An example hook (from [digiplan](https://github.com/rl-institut-private/digiplan/blob/0b40cc944a94c8ad73ce95b4d0cc2fd092d91433/digiplan/map/hooks.py#L48), adapting electricity demand) could be set up as follows:
 
+
 ```python
 from django_oemof import hooks
 
@@ -116,6 +117,63 @@ You can get a sankey from result flows by visiting `/oemof/flows?simulation_id=<
 
 This will give you a sankey like this:
 ![Sankey made from oemof results](./docs/images/sankey.png)
+
+## API endpoints
+
+Start a simulation with a post request on "/simulate"
+
+```
+import requests
+import json
+
+HOST = "http://127.0.0.1:8000"
+SIMULATE_URL = f"{HOST}/oemof/simulate"
+
+payload = {
+    "scenario": "<name of a scenario datapackage within data/oemof folder>",
+    "parameters": json.dumps({"some": "paremeters"}),
+}
+
+with requests.session() as client:
+    req = client.post(
+        SIMULATE_URL,
+        data=payload,
+    )
+    answer = json.loads(req.text)
+    print(f"http://127.0.0.1:8000/oemof/simulate?task_id={answer['task_id']}")
+```
+
+You can terminate this simulation with its task_id
+
+```
+TERMINATE_URL = f"{HOST}/oemof/terminate"
+
+payload = {
+    "task_id": "<task id you got form the simulation>",
+}
+
+with requests.session() as client:
+    req = client.post(
+        TERMINATE_URL,
+        data=payload,
+    )
+```
+
+You can also delete a simulation results provided the simulation id
+
+```
+DELETE_URL = f"{HOST}/oemof/delete"
+
+payload = {
+    "simulation_id": "<simulation id>",
+}
+
+with requests.session() as client:
+    req = client.post(
+        DELETE_URL,
+        data=payload,
+    )
+```
 
 ## Tests
 
